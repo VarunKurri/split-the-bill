@@ -1,0 +1,54 @@
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: var(--radius-full);
+  background: var(--person, var(--color-bg-subtle));
+  color: var(--color-text-inverse);
+  font-weight: 500;
+  user-select: none;
+}
+
+.large {
+  width: 40px;
+  height: 40px;
+  font-size: var(--font-size-md);
+}
+.medium {
+  width: 32px;
+  height: 32px;
+  font-size: var(--font-size-base);
+}
+.small {
+  width: 24px;
+  height: 24px;
+  font-size: var(--font-size-sm);
+}
+
+/* Stacked avatars overlap, each ringed in the surface colour so the
+   overlap reads as depth rather than as a smear. */
+.stack {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+.stack > * {
+  box-shadow: 0 0 0 2px var(--color-bg-surface);
+}
+.stack > * + * {
+  margin-left: -8px;
+}
+
+.overflow {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+}
+
+.empty {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  border: 1.5px dashed var(--color-border-strong);
+  flex: none;
+}

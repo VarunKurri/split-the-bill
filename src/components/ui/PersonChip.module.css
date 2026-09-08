@@ -1,0 +1,77 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  height: 36px;
+  padding-left: var(--space-2xs);
+  padding-right: var(--space-sm);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-sm);
+  font-weight: 500;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.small {
+  height: 28px;
+  font-size: var(--font-size-sm);
+}
+
+.chip:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-subtle);
+}
+
+.on {
+  background: var(--person-soft);
+  border-color: var(--person);
+  border-width: 1.5px;
+  color: var(--color-text-primary);
+}
+.on:hover {
+  background: var(--person-soft);
+  border-color: var(--person);
+}
+
+.dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  flex: none;
+}
+.small .dot {
+  width: 20px;
+  height: 20px;
+  font-size: var(--font-size-xs);
+}
+.on .dot {
+  background: var(--person);
+  color: var(--color-text-inverse);
+}
+
+.name {
+  white-space: nowrap;
+}
+
+.weight {
+  margin-left: var(--space-2xs);
+  padding: 0 var(--space-2xs);
+  border-radius: var(--radius-sm);
+  background: rgb(255 255 255 / 65%);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}

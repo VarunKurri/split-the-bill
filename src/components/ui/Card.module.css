@@ -1,0 +1,32 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--elevation-flat);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 24px;
+}
+
+.title {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-lg);
+  font-weight: 600;
+  letter-spacing: -0.002em;
+  margin: 0;
+}
+
+.trailing {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}

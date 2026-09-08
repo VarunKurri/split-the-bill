@@ -1,0 +1,37 @@
+.group {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  background: var(--color-bg-subtle);
+  border-radius: var(--radius-md);
+}
+
+.option {
+  padding: var(--space-2xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: background-color 120ms ease, color 120ms ease;
+  font-variant-numeric: tabular-nums;
+}
+
+.option:hover {
+  color: var(--color-text-primary);
+}
+
+.selected,
+.selected:hover {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--elevation-flat);
+}
+
+.fill {
+  display: flex;
+}
+.fill .option {
+  flex: 1;
+  text-align: center;
+}
