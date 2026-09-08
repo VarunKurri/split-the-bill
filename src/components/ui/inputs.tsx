@@ -1,7 +1,8 @@
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react';
 import styles from './inputs.module.css';
 
-type BaseProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>;
+// `size` and `prefix` are both HTML attributes we deliberately repurpose.
+type BaseProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size' | 'prefix'>;
 
 interface FieldProps extends BaseProps {
   label?: string;

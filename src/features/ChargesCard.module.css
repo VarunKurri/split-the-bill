@@ -1,0 +1,95 @@
+.line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-md);
+  color: var(--color-text-secondary);
+}
+
+.lineLabel {
+  flex: 1 1 auto;
+}
+
+.lineValue {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.controlHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.controlLabel {
+  flex: 1 1 auto;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-md);
+  color: var(--color-text-secondary);
+}
+
+.controlRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.rateField {
+  width: 96px;
+  flex: none;
+}
+
+.derived {
+  margin-left: auto;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+.basisToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.divider {
+  height: 1px;
+  background: var(--color-border-subtle);
+  border: none;
+  margin: 0;
+}
+
+.totalRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+}
+
+.totalLabel {
+  flex: 1 1 auto;
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.totalValue {
+  font-size: var(--font-size-4xl);
+  line-height: var(--line-height-4xl);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}

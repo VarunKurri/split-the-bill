@@ -1,0 +1,319 @@
+.total {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-lg);
+  font-weight: 600;
+  letter-spacing: -0.002em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Quick add ---- */
+.quickAdd {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  background: var(--color-bg-inset);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.nameField {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.priceField {
+  width: 120px;
+  flex: none;
+}
+
+.quickAddActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.shareToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  height: 40px;
+  padding-inline: var(--space-xs);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* ---- List ---- */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.empty {
+  padding: var(--space-xl) var(--space-md);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  border: 1px dashed var(--color-border-default);
+  border-radius: var(--radius-lg);
+}
+
+/* ---- Row ---- */
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  transition: background-color 120ms ease, border-color 120ms ease;
+  text-align: left;
+  width: 100%;
+}
+
+.row:hover {
+  background: var(--color-bg-subtle);
+}
+
+.rowUnassigned {
+  background: var(--color-bg-warning-subtle);
+  border-color: var(--color-border-default);
+}
+.rowUnassigned:hover {
+  background: var(--color-bg-warning-subtle);
+  border-color: var(--color-border-strong);
+}
+
+.rowOpen,
+.rowOpen:hover {
+  background: var(--color-bg-surface);
+  border-color: var(--color-border-brand);
+  border-width: 1.5px;
+}
+
+.details {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  /* The row is a button, so the browser would otherwise centre its text. */
+  text-align: left;
+}
+
+.name {
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-base);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  color: var(--color-text-secondary);
+  min-width: 0;
+}
+
+.metaWarning {
+  color: var(--color-text-warning);
+}
+
+.metaText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.amount {
+  width: 88px;
+  flex: none;
+  text-align: right;
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-lg);
+  font-weight: 600;
+  letter-spacing: -0.002em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  flex: none;
+}
+
+.iconButton {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xl);
+  line-height: 1;
+}
+
+.iconButton:hover {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-danger);
+}
+
+.chevron {
+  font-size: var(--font-size-base);
+  transition: transform 150ms ease;
+}
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ---- Assign tray ---- */
+.tray {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  margin-top: calc(var(--space-3xs) * -1);
+  background: var(--color-bg-inset);
+  border: 1px solid var(--color-border-subtle);
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.trayHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.trayLabel {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  color: var(--color-text-secondary);
+  margin-right: auto;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.weights {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding-top: var(--space-xs);
+  border-top: 1px dashed var(--color-border-subtle);
+}
+
+.weightRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+.weightName {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  overflow: hidden;
+}
+
+.stepperButton {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-md);
+}
+.stepperButton:hover:not(:disabled) {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+}
+.stepperButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.stepperValue {
+  min-width: 26px;
+  text-align: center;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+.weightAmount {
+  width: 72px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.trayEmpty {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ---- Unassigned banner ---- */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg-warning-subtle);
+  border: 1px solid var(--amber-100);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-warning);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+}
+
+.bannerText {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 720px) {
+  .quickAdd {
+    flex-wrap: wrap;
+  }
+  .nameField {
+    flex-basis: 100%;
+  }
+}

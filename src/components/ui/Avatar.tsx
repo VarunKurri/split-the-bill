@@ -8,10 +8,13 @@ interface AvatarProps {
   person: Person;
   size?: Size;
   title?: string;
+  /** Single initial — used inside a stack, where neighbours overlap the glyph. */
+  compact?: boolean;
 }
 
 /** Mirrors the `Avatar` component set in Figma. */
-export function Avatar({ person, size = 'medium', title }: AvatarProps) {
+export function Avatar({ person, size = 'medium', title, compact = false }: AvatarProps) {
+  const label = initials(person.name);
   return (
     <span
       className={`${styles.avatar} ${styles[size]}`}
@@ -19,7 +22,7 @@ export function Avatar({ person, size = 'medium', title }: AvatarProps) {
       title={title ?? person.name}
       aria-hidden="true"
     >
-      {initials(person.name)}
+      {compact ? label[0] : label}
     </span>
   );
 }
@@ -45,7 +48,7 @@ export function AvatarStack({ people, max = 3, size = 'small' }: AvatarStackProp
   return (
     <span className={styles.stack} aria-label={people.map((p) => p.name).join(', ')} role="img">
       {shown.map((person) => (
-        <Avatar key={person.id} person={person} size={size} />
+        <Avatar key={person.id} person={person} size={size} compact />
       ))}
       {overflow > 0 && (
         <span className={`${styles.avatar} ${styles[size]} ${styles.overflow}`} aria-hidden="true">

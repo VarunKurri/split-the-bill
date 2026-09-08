@@ -40,6 +40,12 @@
   margin-left: -8px;
 }
 
+/* Stacked faces overlap, so they carry a single initial — two letters would
+   be clipped by the neighbour sitting on top of them. */
+.stack .avatar {
+  font-size: var(--font-size-sm);
+}
+
 .overflow {
   background: var(--color-bg-subtle);
   color: var(--color-text-secondary);

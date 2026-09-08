@@ -1,0 +1,55 @@
+.app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.body {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: calc(var(--layout-max-width) + var(--space-6xl) * 2);
+  margin-inline: auto;
+  padding: var(--space-2xl) var(--space-6xl) var(--space-4xl);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2xl);
+}
+
+.main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.rail {
+  width: var(--layout-rail-width);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  position: sticky;
+  top: calc(var(--layout-topbar-height) + var(--space-2xl));
+}
+
+@media (max-width: 1100px) {
+  .body {
+    padding-inline: var(--space-2xl);
+  }
+  .rail {
+    width: 360px;
+  }
+}
+
+@media (max-width: 900px) {
+  .body {
+    flex-direction: column;
+    padding: var(--space-lg) var(--space-md) var(--space-3xl);
+    gap: var(--space-lg);
+  }
+  .rail {
+    width: 100%;
+    position: static;
+  }
+}
