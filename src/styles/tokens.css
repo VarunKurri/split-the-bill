@@ -1,0 +1,174 @@
+/*
+ * Design tokens — generated from the Figma variable collections in
+ * https://www.figma.com/design/qWtj3HHYkn9oMfCP1AfjHc
+ *
+ * Variable names map 1:1 to the Figma names (`color/bg/canvas` -> `--color-bg-canvas`),
+ * which is what the `code syntax` field on each Figma variable declares. Keep them in
+ * sync: renaming here without renaming there breaks Dev Mode handoff.
+ */
+
+:root {
+  /* ---- Primitives ------------------------------------------------------ */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --slate-950: #020617;
+
+  --indigo-50: #eef2ff;
+  --indigo-100: #e0e7ff;
+  --indigo-200: #c7d2fe;
+  --indigo-300: #a5b4fc;
+  --indigo-400: #818cf8;
+  --indigo-500: #6366f1;
+  --indigo-600: #4f46e5;
+  --indigo-700: #4338ca;
+  --indigo-800: #3730a3;
+  --indigo-900: #312e81;
+
+  --teal-50: #f0fdfa;
+  --teal-100: #ccfbf1;
+  --teal-500: #14b8a6;
+  --teal-600: #0d9488;
+  --teal-700: #0f766e;
+
+  --green-50: #f0fdf4;
+  --green-100: #dcfce7;
+  --green-500: #22c55e;
+  --green-600: #16a34a;
+  --green-700: #15803d;
+
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --amber-700: #b45309;
+
+  --red-50: #fef2f2;
+  --red-100: #fee2e2;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+
+  /* ---- Semantic colour ------------------------------------------------- */
+  --color-bg-canvas: var(--slate-50);
+  --color-bg-surface: #ffffff;
+  --color-bg-subtle: var(--slate-100);
+  --color-bg-inset: var(--slate-50);
+  --color-bg-inverse: var(--slate-900);
+  --color-bg-brand: var(--indigo-600);
+  --color-bg-brand-hover: var(--indigo-700);
+  --color-bg-brand-subtle: var(--indigo-50);
+  --color-bg-accent: var(--teal-500);
+  --color-bg-accent-subtle: var(--teal-50);
+  --color-bg-success-subtle: var(--green-50);
+  --color-bg-warning-subtle: var(--amber-50);
+  --color-bg-danger: var(--red-600);
+  --color-bg-danger-subtle: var(--red-50);
+  --color-bg-overlay: rgb(2 6 23 / 45%);
+
+  --color-text-primary: var(--slate-900);
+  --color-text-secondary: var(--slate-600);
+  --color-text-tertiary: var(--slate-400);
+  --color-text-inverse: #ffffff;
+  --color-text-brand: var(--indigo-600);
+  --color-text-success: var(--green-700);
+  --color-text-warning: var(--amber-700);
+  --color-text-danger: var(--red-600);
+
+  --color-border-subtle: var(--slate-200);
+  --color-border-default: var(--slate-300);
+  --color-border-strong: var(--slate-400);
+  --color-border-brand: var(--indigo-600);
+  --color-border-focus: var(--indigo-500);
+  --color-border-danger: var(--red-500);
+
+  /* ---- Person palette --------------------------------------------------
+   * A colour is assigned on join and never reused within one bill, so a
+   * colour always means exactly one person across avatars, chips and rows.
+   */
+  --color-person-1: #6366f1;
+  --color-person-2: #14b8a6;
+  --color-person-3: #f59e0b;
+  --color-person-4: #f43f5e;
+  --color-person-5: #a855f7;
+  --color-person-6: #0ea5e9;
+  --color-person-7: #84cc16;
+  --color-person-8: #f97316;
+
+  --color-person-soft-1: #e0e7ff;
+  --color-person-soft-2: #ccfbf1;
+  --color-person-soft-3: #fef3c7;
+  --color-person-soft-4: #ffe4e6;
+  --color-person-soft-5: #f3e8ff;
+  --color-person-soft-6: #e0f2fe;
+  --color-person-soft-7: #ecfccb;
+  --color-person-soft-8: #ffedd5;
+
+  /* ---- Spacing --------------------------------------------------------- */
+  --space-3xs: 2px;
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 20px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 40px;
+  --space-4xl: 48px;
+  --space-5xl: 64px;
+  --space-6xl: 80px;
+
+  /* ---- Radius ---------------------------------------------------------- */
+  --radius-none: 0px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 999px;
+
+  /* ---- Typography ------------------------------------------------------ */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 22px;
+  --font-size-3xl: 28px;
+  --font-size-4xl: 34px;
+  --font-size-5xl: 44px;
+
+  --line-height-xs: 16px;
+  --line-height-sm: 18px;
+  --line-height-base: 20px;
+  --line-height-md: 22px;
+  --line-height-lg: 24px;
+  --line-height-xl: 26px;
+  --line-height-2xl: 30px;
+  --line-height-3xl: 36px;
+  --line-height-4xl: 42px;
+  --line-height-5xl: 52px;
+
+  /* ---- Elevation ------------------------------------------------------- */
+  --elevation-flat: 0 1px 2px rgb(15 23 42 / 5%);
+  --elevation-card: 0 1px 2px rgb(15 23 42 / 4%), 0 4px 12px -2px rgb(15 23 42 / 6%);
+  --elevation-raised: 0 2px 4px -1px rgb(15 23 42 / 5%), 0 10px 24px -4px rgb(15 23 42 / 10%);
+  --elevation-overlay: 0 8px 16px -4px rgb(15 23 42 / 8%), 0 24px 48px -12px rgb(15 23 42 / 18%);
+  --focus-ring: 0 0 0 3px rgb(99 102 241 / 35%);
+
+  /* ---- Layout ---------------------------------------------------------- */
+  --layout-max-width: 1280px;
+  --layout-rail-width: 400px;
+  --layout-topbar-height: 64px;
+}

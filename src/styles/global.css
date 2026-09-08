@@ -1,0 +1,137 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg-canvas);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-md);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* Every money figure uses tabular numerals so decimal points line up in a column. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Type ramp (mirrors the Figma text styles) ------------------------- */
+.t-display-l {
+  font-size: var(--font-size-5xl);
+  line-height: var(--line-height-5xl);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.t-heading-xl {
+  font-size: var(--font-size-3xl);
+  line-height: var(--line-height-3xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.t-heading-l {
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-2xl);
+  font-weight: 600;
+  letter-spacing: -0.006em;
+}
+.t-heading-m {
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-xl);
+  font-weight: 600;
+  letter-spacing: -0.004em;
+}
+.t-heading-s {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-lg);
+  font-weight: 600;
+  letter-spacing: -0.002em;
+}
+.t-body-l {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-lg);
+}
+.t-body-m {
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-md);
+}
+.t-body-s {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+}
+.t-label-l {
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-base);
+  font-weight: 500;
+}
+.t-label-m {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-sm);
+  font-weight: 500;
+}
+.t-label-s {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-xs);
+  font-weight: 500;
+}
+.t-caption {
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+  font-weight: 500;
+  letter-spacing: 0.004em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
