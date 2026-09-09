@@ -51,15 +51,15 @@ function pay(...payments: Payment[]): Partial<Bill> {
 describe('buildShareText', () => {
   it('leads with the bill name, total and party size', () => {
     const text = textFor();
-    expect(text).toContain('Dinner — $78.00');
+    expect(text).toContain('Dinner: $78.00');
     expect(text).toContain('2 people');
   });
 
   it('lists every item with its price and who had it', () => {
     const text = textFor();
-    expect(text).toContain('• Steak — $40.00');
+    expect(text).toContain('• Steak: $40.00');
     expect(text).toContain('Alex');
-    expect(text).toContain('• Salad — $20.00');
+    expect(text).toContain('• Salad: $20.00');
     expect(text).toContain('Bri');
   });
 
@@ -99,7 +99,7 @@ describe('buildShareText', () => {
   it('shows each person’s derivation, not just their total', () => {
     const text = textFor();
     expect(text).toContain('Alex: $52.00');
-    expect(text).toContain('Steak — $40.00');
+    expect(text).toContain('Steak: $40.00');
     expect(text).toContain('subtotal $40.00');
     expect(text).toContain('+ tax $4.00 + tip $8.00');
   });
@@ -131,7 +131,7 @@ describe('buildShareText', () => {
 
   it('says nothing about payments when none are recorded', () => {
     const text = textFor();
-    expect(text).not.toContain('PAID SO FAR');
+    expect(text).not.toContain('PAID TO THE RESTAURANT');
     expect(text).not.toContain('SETTLE UP');
   });
 
@@ -153,7 +153,7 @@ describe('buildShareText', () => {
   it('includes the settle-up plan once someone has covered the bill', () => {
     const text = textFor(pay({ personId: 'a', amountCents: 7800 }));
     expect(text).toContain('SETTLE UP');
-    expect(text).toContain('Bri → Alex: $26.00');
+    expect(text).toContain('Bri pays Alex: $26.00');
   });
 
   it('flags money still owed to the restaurant', () => {
@@ -170,11 +170,31 @@ describe('buildShareText', () => {
     const text = textFor(
       pay({ personId: 'a', amountCents: 5200 }, { personId: 'b', amountCents: 2600 }),
     );
-    expect(text).toContain('PAID SO FAR');
+    expect(text).toContain('PAID TO THE RESTAURANT');
     expect(text).not.toContain('SETTLE UP');
   });
 
   it('always explains how tax and tip were shared', () => {
     expect(textFor()).toContain('in proportion to what each person ordered');
+  });
+
+  it('uses no em dashes anywhere', () => {
+    // They read as filler in a chat message. Asserted rather than tidied once,
+    // so they don't creep back in the next time this text is edited.
+    const orphan: Item = {
+      id: 'i3',
+      name: 'Mystery side',
+      priceCents: 1000,
+      splitMode: 'equal',
+      assignments: [],
+    };
+    const text = textFor({
+      items: [solo('i1', 'Steak', 4000, 'a'), orphan],
+      payments: [{ personId: 'a', amountCents: 5000 }],
+      settledPersonIds: ['b'],
+    });
+
+    expect(text).not.toContain('—');
+    expect(text).not.toContain('–');
   });
 });

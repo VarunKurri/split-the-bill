@@ -39,6 +39,11 @@ export function PaymentsCard() {
         )
       }
     >
+      <p className={styles.hint}>
+        What each person handed to the restaurant, whatever they ordered. One card covering everyone
+        is the usual case.
+      </p>
+
       <ul className={styles.list}>
         {bill.people.map((person) => {
           const breakdown = summary.perPerson.find((p) => p.personId === person.id);

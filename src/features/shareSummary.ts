@@ -21,14 +21,14 @@ import type { Bill, BillSummary, ID, Item, PersonBreakdown } from '../domain/typ
 export function buildShareText(bill: Bill, summary: BillSummary): string {
   const out: string[] = [];
 
-  out.push(`${bill.name} — ${formatCents(summary.totalCents)}`);
+  out.push(`${bill.name}: ${formatCents(summary.totalCents)}`);
   out.push(`${bill.people.length} ${bill.people.length === 1 ? 'person' : 'people'}`);
 
   /* ---- What was ordered ---- */
   if (bill.items.length > 0) {
     out.push('', 'ITEMS');
     for (const item of bill.items) {
-      out.push(`• ${item.name} — ${formatCents(item.priceCents)}`);
+      out.push(`• ${item.name}: ${formatCents(item.priceCents)}`);
       out.push(`    ${whoHadIt(item, bill)}`);
     }
   }
@@ -71,7 +71,8 @@ export function buildShareText(bill: Bill, summary: BillSummary): string {
 
   /* ---- Money that has actually changed hands ---- */
   if (summary.paidCents > 0) {
-    out.push('', 'PAID SO FAR');
+    out.push('', 'PAID TO THE RESTAURANT');
+    out.push('What each person actually put on the bill, whatever they ordered:');
     for (const person of bill.people) {
       const breakdown = summary.perPerson.find((p) => p.personId === person.id);
       if (!breakdown || breakdown.paidCents === 0) continue;
@@ -87,9 +88,10 @@ export function buildShareText(bill: Bill, summary: BillSummary): string {
 
   if (summary.transfers.length > 0) {
     out.push('', 'SETTLE UP');
+    out.push('Squaring what each person paid against what they owe:');
     for (const transfer of summary.transfers) {
       out.push(
-        `${nameOf(bill, transfer.fromPersonId)} → ${nameOf(bill, transfer.toPersonId)}: ${formatCents(
+        `${nameOf(bill, transfer.fromPersonId)} pays ${nameOf(bill, transfer.toPersonId)}: ${formatCents(
           transfer.amountCents,
         )}`,
       );
@@ -97,12 +99,12 @@ export function buildShareText(bill: Bill, summary: BillSummary): string {
   }
 
   out.push('', 'Tax and tip are shared in proportion to what each person ordered,');
-  out.push('not split evenly — so nobody pays tip on a meal they did not have.');
+  out.push('not split evenly, so nobody pays tip on a meal they did not have.');
 
   return out.join('\n');
 }
 
-/** Each item share, then the charges, then any rounding — indented under a name. */
+/** Each item share, then the charges, then any rounding, indented under a name. */
 function personDetail(breakdown: PersonBreakdown): string[] {
   if (breakdown.lines.length === 0) return ['    nothing assigned yet'];
 
@@ -110,7 +112,7 @@ function personDetail(breakdown: PersonBreakdown): string[] {
     (line) =>
       `    ${line.itemName}` +
       (line.shareLabel === 'full' ? '' : ` (${line.shareLabel})`) +
-      ` — ${formatCents(line.amountCents)}`,
+      `: ${formatCents(line.amountCents)}`,
   );
 
   lines.push(`    subtotal ${formatCents(breakdown.subtotalCents)}`);
@@ -123,7 +125,7 @@ function personDetail(breakdown: PersonBreakdown): string[] {
   return lines;
 }
 
-/** "Varun, Sujai · $11.00 each" — who was on an item and what it cost them. */
+/** "Varun, Sujai · $11.00 each": who was on an item and what it cost them. */
 function whoHadIt(item: Item, bill: Bill): string {
   const names = item.assignments
     .map((a) => bill.people.find((p) => p.id === a.personId)?.name)

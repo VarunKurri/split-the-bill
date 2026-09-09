@@ -44,9 +44,9 @@ export function ItemsCard() {
             <strong>
               {unassignedCount} {unassignedCount === 1 ? 'item' : 'items'} unassigned
             </strong>{' '}
-            &middot; {formatCents(summary.unassignedCents)} of items, plus their share of the
-            charges &mdash; {formatCents(summary.unclaimedTaxCents)} tax and{' '}
-            {formatCents(summary.unclaimedTipCents)} tip &mdash; is owed by nobody.
+            &middot; {formatCents(summary.unassignedCents)} of items, plus{' '}
+            {formatCents(summary.unclaimedTaxCents)} tax and{' '}
+            {formatCents(summary.unclaimedTipCents)} tip, is owed by nobody.
           </span>
           {bill.people.length > 0 && (
             <Button size="small" variant="secondary" onClick={splitRemainingEvenly}>
