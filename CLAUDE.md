@@ -133,7 +133,9 @@ Connect can be wired without renaming anything.
 ## Known gaps
 
 - No receipt OCR (explicitly a nice-to-have in the brief, and not started).
-- No dark mode. Tokens are structured for it, but the Figma Starter plan allows one
-  mode per collection so there is no second palette to port.
+- Dark mode exists in code but **not in Figma**. The Starter plan allows one mode per
+  variable collection, so the dark palette in `tokens.css` (`:root[data-theme='dark']`)
+  has no Figma counterpart. If the plan is ever upgraded, add a second mode to the
+  colour collection and port those values rather than reinventing them.
 - The bill is per-browser. No sharing beyond copying the text summary.
 - `AvatarStack` caps at 3 faces + a count; there's no hover card listing the rest.

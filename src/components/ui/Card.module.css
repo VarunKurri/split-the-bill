@@ -30,3 +30,10 @@
   align-items: center;
   gap: var(--space-xs);
 }
+
+@media (max-width: 560px) {
+  .card {
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
+  }
+}

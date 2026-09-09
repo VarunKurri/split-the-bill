@@ -41,6 +41,8 @@ refresh mid-dinner doesn't lose it.
   same split rather than resetting it.
 - Record who actually paid, and get the shortest list of "A pays B" that squares
   everyone up.
+- Light and dark, following the OS until you pick a side. Resolved before first paint,
+  so there is no flash on load.
 - Set tax and tip as a percentage or a flat amount; tip on pre- or post-tax.
 - See what everyone owes, live, with the full derivation on demand.
 - Copy a plain-text summary for the group chat.

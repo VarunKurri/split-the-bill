@@ -75,12 +75,80 @@
   gap: var(--space-xs);
 }
 
-@media (max-width: 720px) {
+.themeToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.themeToggle:hover {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+}
+
+/*
+ * The bill name is the only thing here that can grow, so it takes the
+ * squeeze: it shrinks first, then the date and headcount drop, then the
+ * wordmark. The two buttons and the theme toggle never wrap onto a second
+ * row, because a top bar that changes height as you type is worse than a
+ * truncated name.
+ */
+@media (max-width: 900px) {
+  .bar {
+    padding-inline: var(--space-lg);
+  }
+  .meta {
+    display: none;
+  }
+  .nameInput {
+    min-width: 6ch;
+    max-width: 16ch;
+  }
+}
+
+@media (max-width: 620px) {
   .bar {
     padding-inline: var(--space-md);
+    gap: var(--space-xs);
   }
-  .meta,
-  .divider {
+  .divider,
+  .wordmark {
     display: none;
+  }
+  .nameInput {
+    min-width: 0;
+    max-width: 14ch;
+    flex: 0 1 auto;
+    min-inline-size: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .nameInput {
+    max-width: 10ch;
+  }
+  .actions {
+    gap: var(--space-3xs);
+  }
+}
+
+/* Small phones: the buttons keep their labels and give up padding instead. */
+@media (max-width: 380px) {
+  .bar {
+    padding-inline: var(--space-sm);
+  }
+  .nameInput {
+    max-width: 8ch;
+  }
+  .actions button {
+    padding-inline: var(--space-xs);
   }
 }

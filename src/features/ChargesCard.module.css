@@ -95,3 +95,18 @@
   font-variant-numeric: tabular-nums;
   color: var(--color-text-primary);
 }
+
+@media (max-width: 560px) {
+  /* A 34px total is a lot of pixels on a 375px screen; it stays the biggest
+     thing in the card without dominating it. */
+  .totalValue {
+    font-size: var(--font-size-3xl);
+    line-height: var(--line-height-3xl);
+  }
+  .rateField {
+    width: 84px;
+  }
+  .controlRow {
+    gap: var(--space-xs);
+  }
+}
