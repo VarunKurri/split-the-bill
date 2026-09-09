@@ -4,6 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Split a restaurant bill by item, with proportional tax and tip.",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0",
+    "npm": ">=10"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

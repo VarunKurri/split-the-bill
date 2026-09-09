@@ -6,7 +6,9 @@ person actually ordered.
 ## Running it
 
 Requires **Node 20.19+ or 22.12+** and **npm 10+** (bundled with those Node
-versions). The floor comes from Vite 7; CI runs Node 22. Check with `node -v`.
+versions). The floor comes from Vite 7 and is declared in `engines`, so `npm install`
+will warn if you're below it. There's an `.nvmrc` if you use nvm — `nvm use` — and CI
+reads the same file.
 
 ```bash
 git clone https://github.com/VarunKurri/split-the-bill.git
