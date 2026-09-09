@@ -1,4 +1,4 @@
-import type { Bill, Charges, Item, Person } from '../domain/types';
+import type { Bill, Charges, Item, Payment, Person, SplitMode } from '../domain/types';
 import { DEFAULT_CHARGES, createEmptyBill } from './billReducer';
 
 const STORAGE_KEY = 'split-the-bill:v1';
@@ -58,15 +58,22 @@ function reviveBill(raw: unknown): Bill {
 
   const items: Item[] = asArray(raw.items)
     .filter(isRecord)
-    .map((item, index) => ({
-      id: str(item.id) ?? `item_${index}`,
-      name: str(item.name) ?? 'Item',
-      priceCents: int(item.priceCents) ?? 0,
-      assignments: asArray(item.assignments)
+    .map((item, index) => {
+      // Percent weights are fractional (33.33), so these must not be rounded
+      // to integers the way cents are.
+      const assignments = asArray(item.assignments)
         .filter(isRecord)
-        .map((a) => ({ personId: str(a.personId) ?? '', weight: int(a.weight) ?? 1 }))
-        .filter((a) => a.personId !== '' && knownPeople.has(a.personId) && a.weight > 0),
-    }));
+        .map((a) => ({ personId: str(a.personId) ?? '', weight: num(a.weight) ?? 1 }))
+        .filter((a) => a.personId !== '' && knownPeople.has(a.personId) && a.weight > 0);
+
+      return {
+        id: str(item.id) ?? `item_${index}`,
+        name: str(item.name) ?? 'Item',
+        priceCents: int(item.priceCents) ?? 0,
+        splitMode: reviveSplitMode(item.splitMode, assignments),
+        assignments,
+      };
+    });
 
   const rawCharges = isRecord(raw.charges) ? raw.charges : {};
   const charges: Charges = {
@@ -79,16 +86,36 @@ function reviveBill(raw: unknown): Bill {
     tipBasis: rawCharges.tipBasis === 'postTax' ? 'postTax' : 'preTax',
   };
 
+  const payments: Payment[] = asArray(raw.payments)
+    .filter(isRecord)
+    .map((p) => ({ personId: str(p.personId) ?? '', amountCents: int(p.amountCents) ?? 0 }))
+    .filter((p) => p.personId !== '' && knownPeople.has(p.personId) && p.amountCents > 0);
+
   return {
     name: str(raw.name) ?? 'Dinner',
     createdAt: str(raw.createdAt) ?? new Date().toISOString(),
     people,
     items,
     charges,
+    payments,
     settledPersonIds: asArray(raw.settledPersonIds)
       .filter((id): id is string => typeof id === 'string')
       .filter((id) => knownPeople.has(id)),
   };
+}
+
+/**
+ * Bills stored before split modes existed have no `splitMode`. Rather than
+ * defaulting them all to `equal` — which would mislabel a 2:1 split as even —
+ * infer it from the weights that are already there.
+ */
+function reviveSplitMode(value: unknown, assignments: { weight: number }[]): SplitMode {
+  if (value === 'equal' || value === 'shares' || value === 'percent' || value === 'amount') {
+    return value;
+  }
+  if (assignments.length === 0) return 'equal';
+  const uneven = assignments.some((a) => a.weight !== assignments[0].weight);
+  return uneven ? 'shares' : 'equal';
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

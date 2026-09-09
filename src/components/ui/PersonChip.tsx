@@ -6,8 +6,13 @@ interface PersonChipProps {
   person: Person;
   selected?: boolean;
   size?: 'medium' | 'small';
-  /** Shown as a "x2" suffix when this person's share of an item is weighted. */
-  weight?: number;
+  /**
+   * Suffix shown when this person's share is not the plain default — "x2" for
+   * shares, "50%" for percentages. The caller formats it, because how a weight
+   * should read depends on the item's split mode and this component has no
+   * business knowing about those.
+   */
+  weightLabel?: string | null;
   onClick?: () => void;
   /** Rendered as static markup rather than a button when there's nothing to toggle. */
   interactive?: boolean;
@@ -23,7 +28,7 @@ export function PersonChip({
   person,
   selected = false,
   size = 'medium',
-  weight,
+  weightLabel,
   onClick,
   interactive = true,
 }: PersonChipProps) {
@@ -37,9 +42,7 @@ export function PersonChip({
         {initials(person.name)}
       </span>
       <span className={styles.name}>{person.name}</span>
-      {selected && weight != null && weight > 1 && (
-        <span className={styles.weight}>&times;{weight}</span>
-      )}
+      {selected && weightLabel && <span className={styles.weight}>{weightLabel}</span>}
     </>
   );
 

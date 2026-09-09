@@ -27,8 +27,11 @@ refresh mid-dinner doesn't lose it.
 - Add people; each gets a stable colour that means only them, everywhere in the UI.
 - Add items from a keyboard-first quick-add row: name, Tab, price, Enter, repeat.
 - Assign items by clicking names. Shared plates take any number of people.
-- Split a shared plate unevenly with per-person share weights, and see the resulting
-  amounts as you set them.
+- Split a shared plate equally, by share weights, by percentage, or by exact amount —
+  and see the resulting amounts as you set them. Switching between them restates the
+  same split rather than resetting it.
+- Record who actually paid, and get the shortest list of "A pays B" that squares
+  everyone up.
 - Set tax and tip as a percentage or a flat amount; tip on pre- or post-tax.
 - See what everyone owes, live, with the full derivation on demand.
 - Copy a plain-text summary for the group chat.
@@ -70,9 +73,9 @@ arrive. Everything is on one screen, and the rail keeps a live answer to "what d
 owe?" as you go.
 
 **Deletion is undoable.** Removing a person strips their assignments and leaves the
-affected items unassigned rather than deleting them. The undo toast waits for your
-next action rather than timing out, because at a dinner table you might not look at
-the screen for a minute.
+affected items unassigned rather than deleting them. The undo toast dismisses itself
+after ten seconds — long enough to look up from the table and still catch it — and
+holds open while you hover or focus it, so reaching for Undo never races the timer.
 
 ---
 
@@ -83,6 +86,7 @@ src/
 ├── domain/          Pure functions. No React, no DOM.
 │   ├── money.ts       cents parsing/formatting, largest-remainder allocation
 │   ├── split.ts       calculateSplit(bill) -> BillSummary
+│   ├── settle.ts      net positions -> the shortest list of "A pays B"
 │   └── types.ts
 ├── state/           Reducer, persistence, undo
 ├── components/ui/   Design-system primitives (mirror the Figma component sets)

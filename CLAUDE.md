@@ -68,6 +68,20 @@ uses type-checked rules, which means new files must be inside `tsconfig.app.json
    come from `src/styles/tokens.css`, whose names match the Figma variables 1:1. Add a
    token rather than a literal, and if you add one, add it in Figma too.
 
+7. **Split modes are an editing affordance, not a second allocation model.** `equal`,
+   `shares`, `percent` and `amount` all resolve to the same weight vector, which is what
+   `allocate()` divides. Percentages are weights that add to 100; amounts are weights
+   that add to the item price. When they _don't_ add up, the item is still allocated in
+   full, proportionally, and the UI warns — the arithmetic is never conditional on the
+   user's input being tidy. Switching modes restates the split rather than resetting it.
+   Don't add a mode that computes amounts outside `allocate()`.
+
+8. **What someone owes and what they paid are different numbers.** Payments live on the
+   bill, never folded into the split. `netCents = paid - owed`, and `settle()` turns
+   those into transfers. A shortfall stays reported as `unpaidCents` rather than being
+   absorbed into somebody's share — the same refusal-to-silently-redistribute as
+   invariant 5.
+
 ## Layout of the code
 
 ```

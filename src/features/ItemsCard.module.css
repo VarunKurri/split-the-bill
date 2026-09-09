@@ -99,6 +99,10 @@
   background: var(--color-bg-surface);
   border-color: var(--color-border-brand);
   border-width: 1.5px;
+  /* The tray continues this panel rather than sitting under it, so the row's
+     bottom edge opens into the tray instead of closing the box. */
+  border-bottom: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .details {
@@ -191,9 +195,9 @@
   flex-direction: column;
   gap: var(--space-sm);
   padding: var(--space-md);
-  margin-top: calc(var(--space-3xs) * -1);
   background: var(--color-bg-inset);
-  border: 1px solid var(--color-border-subtle);
+  /* Same edge as the open row above — one panel, split by the fill change. */
+  border: 1.5px solid var(--color-border-brand);
   border-top: none;
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
@@ -218,12 +222,39 @@
   gap: var(--space-xs);
 }
 
+.modeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  padding-top: var(--space-xs);
+  border-top: 1px dashed var(--color-border-subtle);
+}
+
 .weights {
   display: flex;
   flex-direction: column;
   gap: var(--space-2xs);
   padding-top: var(--space-xs);
   border-top: 1px dashed var(--color-border-subtle);
+}
+
+/* The mode row already draws the divider above the weights. */
+.modeRow + .weights {
+  border-top: none;
+  padding-top: 0;
+}
+
+.percentField {
+  width: 92px;
+  flex: none;
+}
+
+.percentWarning {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+  color: var(--color-text-warning);
 }
 
 .weightRow {
