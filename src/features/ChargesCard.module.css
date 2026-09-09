@@ -39,7 +39,9 @@
 .controlRow {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
+  /* Presets drop to their own line before they start squeezing the rate field. */
+  flex-wrap: wrap;
 }
 
 .rateField {

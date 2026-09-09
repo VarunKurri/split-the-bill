@@ -150,11 +150,11 @@ function PersonSummary({
           </div>
 
           <div className={styles.actions}>
-            <Button
-              size="small"
-              variant={settled ? 'ghost' : 'secondary'}
-              onClick={onToggleSettled}
-            >
+            {/*
+              Always `secondary`. Ghost on the settled card's green tint left
+              the button all but invisible, and its grey hover fought the green.
+            */}
+            <Button size="small" variant="secondary" onClick={onToggleSettled}>
               {settled ? 'Mark unpaid' : 'Mark settled'}
             </Button>
           </div>

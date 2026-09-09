@@ -1,3 +1,16 @@
+/*
+ * These are short statements, not table rows. Let them run the full width of a
+ * wide card and "Sujai pays Varun" ends up a long way from the amount it
+ * refers to, which is harder to read, not easier.
+ */
+.hint,
+.list,
+.tally,
+.settle,
+.actions {
+  max-width: 34rem;
+}
+
 .hint {
   margin: 0;
   font-size: var(--font-size-sm);
