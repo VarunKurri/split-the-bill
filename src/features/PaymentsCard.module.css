@@ -1,16 +1,3 @@
-/*
- * These are short statements, not table rows. Let them run the full width of a
- * wide card and "Sujai pays Varun" ends up a long way from the amount it
- * refers to, which is harder to read, not easier.
- */
-.hint,
-.list,
-.tally,
-.settle,
-.actions {
-  max-width: 34rem;
-}
-
 .hint {
   margin: 0;
   font-size: var(--font-size-sm);
@@ -131,4 +118,22 @@
 .actions {
   display: flex;
   justify-content: flex-end;
+}
+
+@media (max-width: 560px) {
+  .amountField {
+    width: 92px;
+  }
+  .row {
+    gap: var(--space-2xs);
+  }
+  /* The net figure is derived from the two numbers either side of it, so it
+     is the first thing to go when the row runs out of room. */
+  .netUp,
+  .netDown {
+    display: none;
+  }
+  .transfer {
+    gap: var(--space-2xs);
+  }
 }

@@ -370,3 +370,59 @@
     flex-basis: 100%;
   }
 }
+
+/*
+ * Phone sizes. The row keeps its shape — name, who, price, remove — and gives
+ * up padding and gap instead, because reflowing a list row into two lines
+ * makes a list of six items twice as long to scan.
+ */
+@media (max-width: 560px) {
+  .row {
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+  }
+  .amount {
+    width: 76px;
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-base);
+  }
+  .tray {
+    padding: var(--space-sm);
+  }
+  .banner {
+    flex-wrap: wrap;
+    padding: var(--space-sm);
+  }
+  .bannerText {
+    flex-basis: 100%;
+  }
+  .quickAddActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .priceField {
+    width: 108px;
+  }
+  /* The name column can shrink; the stepper and the amount cannot. */
+  .weightRow {
+    gap: var(--space-2xs);
+  }
+  .weightAmount {
+    width: 64px;
+  }
+  .percentField {
+    width: 84px;
+  }
+}
+
+/*
+ * Under ~420px the row has about 95px for its text once the avatars, price
+ * and remove button take their share. The badge already says the important
+ * thing ("Nobody yet", "Shared x 3"), so the secondary hint goes rather than
+ * being ellipsed down to a single character. It is one tap away in the tray.
+ */
+@media (max-width: 420px) {
+  .metaText {
+    display: none;
+  }
+}

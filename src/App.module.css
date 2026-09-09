@@ -42,14 +42,37 @@
   }
 }
 
+/*
+ * Below 900px the rail stops being a rail. It goes under the main column and
+ * loses `position: sticky` — a sticky block that is taller than the viewport
+ * just sits there and steals the screen on a phone.
+ */
 @media (max-width: 900px) {
   .body {
     flex-direction: column;
+    /*
+     * Must be reset with the direction. `flex-start` cross-aligns the columns
+     * in row mode; in column mode it shrink-wraps them to their content width
+     * instead of the viewport, so the page gets a fixed minimum width and
+     * scrolls sideways on every phone.
+     */
+    align-items: stretch;
     padding: var(--space-lg) var(--space-md) var(--space-3xl);
     gap: var(--space-lg);
   }
   .rail {
     width: 100%;
     position: static;
+  }
+}
+
+@media (max-width: 480px) {
+  .body {
+    padding: var(--space-md) var(--space-sm) var(--space-2xl);
+    gap: var(--space-md);
+  }
+  .main,
+  .rail {
+    gap: var(--space-md);
   }
 }

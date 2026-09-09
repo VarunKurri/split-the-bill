@@ -70,7 +70,7 @@
   margin-left: var(--space-2xs);
   padding: 0 var(--space-2xs);
   border-radius: var(--radius-sm);
-  background: rgb(255 255 255 / 65%);
+  background: var(--color-bg-translucent);
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
   font-variant-numeric: tabular-nums;

@@ -40,18 +40,21 @@
 
   --green-50: #f0fdf4;
   --green-100: #dcfce7;
+  --green-400: #4ade80;
   --green-500: #22c55e;
   --green-600: #16a34a;
   --green-700: #15803d;
 
   --amber-50: #fffbeb;
   --amber-100: #fef3c7;
+  --amber-400: #fbbf24;
   --amber-500: #f59e0b;
   --amber-600: #d97706;
   --amber-700: #b45309;
 
   --red-50: #fef2f2;
   --red-100: #fee2e2;
+  --red-400: #f87171;
   --red-500: #ef4444;
   --red-600: #dc2626;
   --red-700: #b91c1c;
@@ -75,6 +78,8 @@
   --color-bg-danger: var(--red-600);
   --color-bg-danger-subtle: var(--red-50);
   --color-bg-overlay: rgb(2 6 23 / 45%);
+  /* Sits on top of a person's colour, so it can't be a fixed grey. */
+  --color-bg-translucent: rgb(255 255 255 / 65%);
 
   --color-text-primary: var(--slate-900);
   --color-text-secondary: var(--slate-600);
@@ -175,4 +180,84 @@
   --layout-max-width: 1280px;
   --layout-rail-width: 400px;
   --layout-topbar-height: 64px;
+}
+
+/*
+ * Dark mode.
+ *
+ * Only the semantic layer is redefined; the primitives above are the same
+ * palette seen in different light, which is what keeps the two themes from
+ * drifting into two unrelated designs.
+ *
+ * `data-theme` is always set explicitly on <html> — the inline script in
+ * index.html resolves the stored choice or the OS preference before first
+ * paint, so there is no flash and no need to repeat this block under a
+ * `prefers-color-scheme` media query.
+ *
+ * Three things deliberately do NOT flip:
+ *
+ * - `--color-text-inverse` stays white. It labels things sitting on a solid
+ *   colour (a person's avatar, a primary button, the solid warning badge),
+ *   and those stay dark-on-colour in both themes.
+ * - The eight person colours stay as they are. A colour means one person, and
+ *   that has to hold when someone switches theme mid-dinner.
+ * - Tinted surfaces become translucent versions of their colour rather than
+ *   dark hexes, so they read as the same amber/green/red at any depth.
+ */
+:root[data-theme='dark'] {
+  /* Tells the browser to render form controls and scrollbars dark too. */
+  color-scheme: dark;
+
+  --color-bg-canvas: var(--slate-950);
+  --color-bg-surface: var(--slate-900);
+  --color-bg-subtle: var(--slate-800);
+  --color-bg-inset: #0c1424;
+  --color-bg-inverse: var(--slate-800);
+  --color-bg-brand: var(--indigo-500);
+  --color-bg-brand-hover: var(--indigo-400);
+  --color-bg-brand-subtle: rgb(99 102 241 / 20%);
+  --color-bg-accent: var(--teal-500);
+  --color-bg-accent-subtle: rgb(20 184 166 / 18%);
+  --color-bg-success-subtle: rgb(34 197 94 / 14%);
+  --color-bg-warning-subtle: rgb(245 158 11 / 14%);
+  --color-bg-warning-solid: var(--amber-500);
+  --color-bg-danger: var(--red-500);
+  --color-bg-danger-subtle: rgb(239 68 68 / 14%);
+  --color-bg-overlay: rgb(2 6 23 / 70%);
+  --color-bg-translucent: rgb(2 6 23 / 45%);
+
+  --color-text-primary: var(--slate-50);
+  --color-text-secondary: var(--slate-400);
+  --color-text-tertiary: var(--slate-500);
+  --color-text-brand: var(--indigo-300);
+  --color-text-success: var(--green-400);
+  --color-text-warning: var(--amber-400);
+  --color-text-danger: var(--red-400);
+
+  --color-border-subtle: var(--slate-800);
+  --color-border-default: var(--slate-700);
+  --color-border-strong: var(--slate-600);
+  --color-border-brand: var(--indigo-400);
+  --color-border-focus: var(--indigo-400);
+  --color-border-danger: var(--red-500);
+
+  /* The light pastels are meant to carry dark text. On a dark surface they
+     glare and the near-white text on top of them is unreadable, so the soft
+     fills become translucent versions of the person's own colour. */
+  --color-person-soft-1: rgb(99 102 241 / 24%);
+  --color-person-soft-2: rgb(20 184 166 / 24%);
+  --color-person-soft-3: rgb(245 158 11 / 24%);
+  --color-person-soft-4: rgb(244 63 94 / 24%);
+  --color-person-soft-5: rgb(168 85 247 / 24%);
+  --color-person-soft-6: rgb(14 165 233 / 24%);
+  --color-person-soft-7: rgb(132 204 22 / 24%);
+  --color-person-soft-8: rgb(249 115 22 / 24%);
+
+  /* Shadows do almost nothing on a dark ground, so they go deeper and the
+     borders above carry more of the separation. */
+  --elevation-flat: 0 1px 2px rgb(0 0 0 / 40%);
+  --elevation-card: 0 1px 2px rgb(0 0 0 / 30%), 0 4px 12px -2px rgb(0 0 0 / 45%);
+  --elevation-raised: 0 2px 4px -1px rgb(0 0 0 / 35%), 0 10px 24px -4px rgb(0 0 0 / 55%);
+  --elevation-overlay: 0 8px 16px -4px rgb(0 0 0 / 45%), 0 24px 48px -12px rgb(0 0 0 / 65%);
+  --focus-ring: 0 0 0 3px rgb(129 140 248 / 45%);
 }
