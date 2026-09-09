@@ -3,7 +3,7 @@ import { Card } from '../components/ui/Card';
 import { Field } from '../components/ui/inputs';
 import { SegmentedControl } from '../components/ui/SegmentedControl';
 import { centsToInput, formatCents, parseCents, parsePercent } from '../domain/money';
-import { useBill } from '../state/BillContext';
+import { useBill } from '../state/useBill';
 import styles from './ChargesCard.module.css';
 
 const TIP_PRESETS = [15, 18, 20, 25];

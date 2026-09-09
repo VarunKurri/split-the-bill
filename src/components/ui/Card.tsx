@@ -9,14 +9,8 @@ interface CardProps {
   headingLevel?: 2 | 3;
 }
 
-export function Card({
-  title,
-  trailing,
-  children,
-  className,
-  headingLevel = 2,
-}: CardProps) {
-  const Heading = `h${headingLevel}` as 'h2' | 'h3';
+export function Card({ title, trailing, children, className, headingLevel = 2 }: CardProps) {
+  const Heading = `h${headingLevel}` as const;
   return (
     <section className={[styles.card, className ?? ''].filter(Boolean).join(' ')}>
       <header className={styles.header}>

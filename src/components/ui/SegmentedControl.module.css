@@ -13,7 +13,9 @@
   line-height: var(--line-height-base);
   font-weight: 500;
   color: var(--color-text-secondary);
-  transition: background-color 120ms ease, color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
   font-variant-numeric: tabular-nums;
 }
 

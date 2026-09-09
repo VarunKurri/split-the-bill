@@ -1,7 +1,7 @@
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { formatCents } from '../domain/money';
-import { useBill } from '../state/BillContext';
+import { useBill } from '../state/useBill';
 import { ItemRow } from './ItemRow';
 import { QuickAddItem } from './QuickAddItem';
 import styles from './ItemsCard.module.css';

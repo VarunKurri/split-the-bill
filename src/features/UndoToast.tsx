@@ -1,4 +1,4 @@
-import { useBill } from '../state/BillContext';
+import { useBill } from '../state/useBill';
 import styles from './UndoToast.module.css';
 
 /**

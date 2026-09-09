@@ -12,15 +12,34 @@ Keep it that way unless there's a concrete reason.
 ## Commands
 
 ```bash
-npm run dev        # dev server on :5173
-npm test           # vitest, run once
+npm run dev          # dev server on :5173
+npm test             # vitest, run once
 npm run test:watch
-npm run typecheck  # tsc -b --noEmit
-npm run build      # typecheck + production build
+npm run typecheck    # tsc -b --noEmit
+npm run lint         # eslint (type-checked rules)
+npm run format       # prettier --write .
+npm run verify       # typecheck + lint + format:check + test
+npm run build        # typecheck + production build
 ```
 
-`npm run build` must pass before any commit. `noUnusedLocals` is on, so dead imports
-break the build rather than lingering.
+`npm run verify` is the gate. Run it before you push; the pre-push hook runs the
+same checks anyway, so finding out early is just faster.
+
+## Git hooks
+
+Husky, installed by `npm install` via the `prepare` script. Two gates, split by cost:
+
+- **pre-commit** — `lint-staged` runs `eslint --fix` and `prettier --write` on staged
+  files only. Cheap, so committing stays cheap.
+- **pre-push** — `typecheck`, `lint`, `test` across the whole project.
+
+Don't use `--no-verify` to get around a failing hook. If a rule is wrong, change the
+rule in `eslint.config.js` and say why in the commit; a bypassed hook is invisible to
+the next person.
+
+`noUnusedLocals` is on, so dead imports break the build rather than lingering. ESLint
+uses type-checked rules, which means new files must be inside `tsconfig.app.json`'s
+`include` or the linter will refuse them.
 
 ## Invariants — don't break these
 
@@ -36,10 +55,9 @@ break the build rather than lingering.
    component should do arithmetic on money beyond reading fields off `BillSummary`.
    If a view needs a new number, add it to the summary and test it.
 
-4. **Reconciliation must hold.** `Σ person totals + unassigned + unclaimed charges
-   === bill total`, always. `split.test.ts` sweeps this across many price and
-   party-size combinations. If you change the allocation model, that sweep is the
-   thing that has to stay green.
+4. **Reconciliation must hold.** `Σ person totals + unassigned + unclaimed charges === bill total`,
+   always. `split.test.ts` sweeps this across many price and party-size combinations.
+   If you change the allocation model, that sweep is the thing that has to stay green.
 
 5. **Unassigned items keep their tax and tip unclaimed.** They participate in the
    proportional allocation as a phantom claimant (the final entry in `chargeWeights`).
@@ -53,14 +71,19 @@ break the build rather than lingering.
 ## Layout of the code
 
 ```
-src/domain/      Pure. No React, no DOM. Fully tested.
-src/state/       useReducer + context + localStorage. Tested.
-src/components/ui/  Design-system primitives. Mirror the Figma component sets.
-src/features/    Composed views. Where the product decisions live.
+src/domain/          Pure. No React, no DOM. Fully tested.
+src/state/           useReducer + context + localStorage. Tested.
+src/components/ui/   Design-system primitives. Mirror the Figma component sets.
+src/features/        Composed views. Where the product decisions live.
 ```
 
 Dependencies point one way: `features` -> `components/ui` -> `domain`. `domain` imports
 nothing from the app.
+
+The state layer is split three ways deliberately — `billContext.ts` holds the context
+object, `BillProvider.tsx` the component, `useBill.ts` the hook. One kind of export per
+module is what keeps React Fast Refresh working, and `react-refresh/only-export-components`
+will fail the build if you merge them back together.
 
 ## Conventions
 
@@ -68,7 +91,7 @@ nothing from the app.
 - Money in the UI carries `font-variant-numeric: tabular-nums` (the `.tabular` class or
   the property directly) so columns align on the decimal point.
 - Component props are explicit interfaces, not `React.FC`.
-- Comments explain *why*, not *what*. Most of the code doesn't need one; the ones that
+- Comments explain _why_, not _what_. Most of the code doesn't need one; the ones that
   exist are load-bearing product or maths reasoning.
 
 ## Testing posture

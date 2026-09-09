@@ -3,7 +3,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Field } from '../components/ui/inputs';
 import { PersonChip } from '../components/ui/PersonChip';
-import { useBill } from '../state/BillContext';
+import { useBill } from '../state/useBill';
 import styles from './PeopleCard.module.css';
 
 export function PeopleCard() {

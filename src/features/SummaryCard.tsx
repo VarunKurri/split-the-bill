@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { formatCents } from '../domain/money';
 import type { PersonBreakdown, Person } from '../domain/types';
-import { useBill } from '../state/BillContext';
+import { useBill } from '../state/useBill';
 import { useShareSummary } from './useShareSummary';
 import styles from './SummaryCard.module.css';
 
@@ -47,7 +47,9 @@ export function SummaryCard() {
               settled={bill.settledPersonIds.includes(person.id)}
               open={openPersonId === person.id}
               onToggle={() => setOpenPersonId((id) => (id === person.id ? null : person.id))}
-              onToggleSettled={() => dispatch({ type: 'person/toggleSettled', personId: person.id })}
+              onToggleSettled={() =>
+                dispatch({ type: 'person/toggleSettled', personId: person.id })
+              }
             />
           );
         })}
@@ -99,11 +101,7 @@ function PersonSummary({
 
   return (
     <li
-      className={[
-        styles.person,
-        open ? styles.personOpen : '',
-        settled ? styles.personSettled : '',
-      ]
+      className={[styles.person, open ? styles.personOpen : '', settled ? styles.personSettled : '']
         .filter(Boolean)
         .join(' ')}
     >
@@ -152,7 +150,11 @@ function PersonSummary({
           </div>
 
           <div className={styles.actions}>
-            <Button size="small" variant={settled ? 'ghost' : 'secondary'} onClick={onToggleSettled}>
+            <Button
+              size="small"
+              variant={settled ? 'ghost' : 'secondary'}
+              onClick={onToggleSettled}
+            >
               {settled ? 'Mark unpaid' : 'Mark settled'}
             </Button>
           </div>
@@ -185,7 +187,8 @@ function ReconciliationNote() {
   return (
     <p className={`${styles.reconcile} ${summary.reconciles ? '' : styles.reconcileBad}`}>
       {summary.reconciles ? '✓' : '!'} {formatCents(claimed)}
-      {unclaimed > 0 && ` + ${formatCents(unclaimed)} unclaimed`} = {formatCents(summary.totalCents)}
+      {unclaimed > 0 && ` + ${formatCents(unclaimed)} unclaimed`} ={' '}
+      {formatCents(summary.totalCents)}
     </p>
   );
 }

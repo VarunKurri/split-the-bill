@@ -11,7 +11,11 @@ function run(state: BillState, ...actions: BillAction[]): BillState {
 
 describe('people', () => {
   it('assigns each person the lowest free palette colour', () => {
-    const state = run(fresh(), { type: 'person/add', name: 'Alex' }, { type: 'person/add', name: 'Bri' });
+    const state = run(
+      fresh(),
+      { type: 'person/add', name: 'Alex' },
+      { type: 'person/add', name: 'Bri' },
+    );
     expect(state.bill.people.map((p) => p.colorIndex)).toEqual([1, 2]);
   });
 
