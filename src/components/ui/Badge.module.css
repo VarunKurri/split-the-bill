@@ -26,6 +26,12 @@
   background: var(--color-bg-warning-subtle);
   color: var(--color-text-warning);
 }
+/* The unassigned row is already warning-tinted, so a subtle badge vanishes
+   into it. This one is solid so it reads as a label rather than as backdrop. */
+.warningSolid {
+  background: var(--color-bg-warning-solid);
+  color: var(--color-text-inverse);
+}
 .danger {
   background: var(--color-bg-danger-subtle);
   color: var(--color-text-danger);
