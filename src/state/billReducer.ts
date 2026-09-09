@@ -103,7 +103,8 @@ function nextColorIndex(people: Person[]): number {
 function disambiguate(name: string, people: Person[]): string {
   const trimmed = name.trim();
   const existing = people.filter(
-    (p) => p.name.toLowerCase() === trimmed.toLowerCase() ||
+    (p) =>
+      p.name.toLowerCase() === trimmed.toLowerCase() ||
       new RegExp(`^${escapeRegExp(trimmed)} \\d+$`, 'i').test(p.name),
   );
   return existing.length === 0 ? trimmed : `${trimmed} ${existing.length + 1}`;

@@ -1,13 +1,5 @@
 import { allocate, exactShare, percentOf, sum } from './money';
-import type {
-  Bill,
-  BillSummary,
-  Charges,
-  ID,
-  Item,
-  PersonBreakdown,
-  PersonLine,
-} from './types';
+import type { Bill, BillSummary, Charges, ID, Item, PersonBreakdown, PersonLine } from './types';
 
 /**
  * The whole calculation, as one pure function of the bill.

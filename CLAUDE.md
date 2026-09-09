@@ -37,7 +37,7 @@ break the build rather than lingering.
    If a view needs a new number, add it to the summary and test it.
 
 4. **Reconciliation must hold.** `Σ person totals + unassigned + unclaimed charges
-   === bill total`, always. `split.test.ts` sweeps this across many price and
+=== bill total`, always. `split.test.ts` sweeps this across many price and
    party-size combinations. If you change the allocation model, that sweep is the
    thing that has to stay green.
 
@@ -68,7 +68,7 @@ nothing from the app.
 - Money in the UI carries `font-variant-numeric: tabular-nums` (the `.tabular` class or
   the property directly) so columns align on the decimal point.
 - Component props are explicit interfaces, not `React.FC`.
-- Comments explain *why*, not *what*. Most of the code doesn't need one; the ones that
+- Comments explain _why_, not _what_. Most of the code doesn't need one; the ones that
   exist are load-bearing product or maths reasoning.
 
 ## Testing posture

@@ -36,7 +36,7 @@ refresh mid-dinner doesn't lose it.
 The brief is deliberately underspecified. These are the calls I made.
 
 **The friend who only had a salad.** Per-item assignment is the default, and tax and
-tip are allocated *in proportion to each person's subtotal* rather than per head.
+tip are allocated _in proportion to each person's subtotal_ rather than per head.
 Someone who ordered $12 of food does not pay the same tip as someone who ordered $60.
 This is the single most common way bill-splitters annoy people, so it is the default
 rather than a setting.
@@ -55,7 +55,7 @@ render.
 
 **Items nobody claimed.** An unassigned item is the only thing that can make the
 totals wrong, so it is a first-class state: amber row, persistent banner with the
-amount at stake, and — importantly — its share of tax and tip stays *unclaimed*
+amount at stake, and — importantly — its share of tax and tip stays _unclaimed_
 rather than being silently redistributed onto the people who have already been
 assigned. Nobody gets quietly overcharged for a plate nobody has owned up to. There's
 a one-click "split them evenly" escape hatch for when you stop caring.

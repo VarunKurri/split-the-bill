@@ -135,8 +135,9 @@
   --radius-full: 999px;
 
   /* ---- Typography ------------------------------------------------------ */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
+  --font-family:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
 
   --font-size-xs: 11px;
   --font-size-sm: 12px;
