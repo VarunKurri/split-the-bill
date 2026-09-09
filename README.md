@@ -3,13 +3,20 @@
 Split a restaurant bill by item, with tax and tip shared in proportion to what each
 person actually ordered.
 
+## Running it
+
+Requires **Node 20.19+ or 22.12+** and **npm 10+** (bundled with those Node
+versions). The floor comes from Vite 7; CI runs Node 22. Check with `node -v`.
+
 ```bash
+git clone https://github.com/VarunKurri/split-the-bill.git
+cd split-the-bill
 npm install
 npm run dev      # http://localhost:5173
 ```
 
 ```bash
-npm test         # 46 tests, mostly on the money math
+npm test         # 107 tests, concentrated on the money math
 npm run verify   # typecheck + lint + format check + tests
 npm run build    # typecheck + production build
 ```
@@ -120,15 +127,21 @@ Chip, Badge, Item Row, Summary Row).
 
 ## Testing
 
-46 tests, concentrated where being wrong actually costs something:
+107 tests, concentrated where being wrong actually costs something:
 
 - `money.test.ts` — parsing tolerance and strictness, and an exhaustive sweep proving
   allocation never creates or loses a cent.
-- `split.test.ts` — the salad-eater case, uneven shares, pre/post-tax tip, unassigned
-  items, zero-value items, stale assignments, and reconciliation across a wide sweep
-  of prices and party sizes.
+- `split.test.ts` — the salad-eater case, uneven shares, percent and amount splits
+  (including ones that don't add up), pre/post-tax tip, unassigned items, zero-value
+  items, stale assignments, payments, and reconciliation across a wide sweep of prices
+  and party sizes.
+- `settle.test.ts` — that the settle-up plan invents no money, never asks anyone to
+  send more than they owe, and leaves a shortfall outstanding rather than fabricating
+  a transfer to balance the books.
 - `billReducer.test.ts` — colour recycling, name disambiguation, what happens to items
-  when a person is removed, weight clamping, and undo.
+  when a person is removed, weight clamping, split-mode conversions, and undo.
+- `shareSummary.test.ts` — that the text you paste into the group chat says what
+  actually happened, including who still owes whom.
 
 There are no component render tests. With an hour of budget, tests on the money math
 buy far more confidence per minute than assertions about markup.
