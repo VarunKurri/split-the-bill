@@ -137,37 +137,54 @@ buy far more confidence per minute than assertions about markup.
 
 ## What I'd do with another hour
 
-1. **Receipt photo import.** The nice-to-have in the brief, and the obvious next
-   multiplier — OCR the receipt, propose line items, let the user correct them. The
-   domain layer already takes items from anywhere, so this is an input adapter plus a
-   review-and-correct screen, not a rewrite.
-2. **A shareable link.** Encode the bill in the URL fragment so the summary can be
-   sent to the table rather than read aloud. Still no backend.
-3. **Keyboard assignment.** Number keys to toggle people on the focused row — the
-   fastest possible path once you know the app.
-4. **Component tests for the assign tray.** The one piece of UI with enough state to
-   deserve them.
-5. **Rounding policy choice.** Largest-remainder is fair; some groups would rather one
-   nominated person absorb the residual. That's a one-line change to the allocator and
-   a toggle.
+1. **Receipt photo import.** The brief's nice-to-have and the obvious multiplier. The
+   domain layer already accepts items from anywhere, so it's an input adapter plus a
+   review-and-correct screen, not a rewrite. The model proposes line items; prices are
+   re-parsed through `parseCents`, schema-validated, reconciled against the receipt's
+   printed total, and confirmed by a human before anything reaches state. The model
+   proposes, the deterministic core disposes — nothing unvalidated touches the money.
+2. **An eval set for that import.** Ten labelled receipts scored on item-level
+   precision/recall and total-match rate. Without it, "the OCR works" is a vibe rather
+   than a number, and there's no way to tell whether a prompt change helped.
+3. **A shareable link.** Encode the bill in the URL fragment so the summary can be sent
+   to the table rather than read aloud. Fragment, not query string — it never reaches a
+   server, so it stays backend-free.
+4. **An accessibility pass to WCAG 2.1 AA.** The groundwork is there — semantic
+   buttons, `aria-pressed` on chips, `aria-expanded` on rows, labels on every input,
+   visible focus rings — but it has never been audited. The suspects: contrast on the
+   amber warning text over the amber tint, keyboard traversal of the assign tray
+   including the steppers, and whether changing totals are announced.
+5. **Component tests for the assign tray.** The one piece of UI with enough state to
+   deserve them — four split modes, live per-person amounts, and an unbalanced-input
+   warning.
 
 ---
 
 ## AI tools used
 
-Built with **Claude (Cowork)** end to end, in two phases:
+Built end to end with **Claude (Cowork)** and **Claude Code**, in two phases:
 
 1. **Design.** Claude drove the Figma MCP server to build the design system directly in
    Figma — variable collections with scopes and code syntax, text and effect styles,
    and seven component sets with variants and component properties. The Figma Starter
    plan's 20-tool-calls-per-month cap was reached before the screen frames were built,
-   so the screen specs were captured as a written spec and the UI was composed in code
-   from the same tokens.
-2. **Build.** Claude wrote the whole application — domain layer, tests, state,
-   components and views — iterating rather than one-shotting: the money math was
-   written and tested first, then the UI was built on top of it, then rendered in a
-   headless browser and screenshotted so layout bugs (centre-aligned item names,
-   clipped avatar initials) could be caught and fixed visually before commit.
+   so the screen specs were captured in writing and the UI was composed in code from
+   the same tokens. `src/styles/tokens.css` matches the Figma variable names 1:1, so
+   Code Connect can be wired later without renaming anything.
+2. **Build.** Claude wrote the application — domain layer, tests, state, components and
+   views — iterating rather than one-shotting. The money math was written and tested
+   first, then the UI was built on top of it, then rendered in a headless browser and
+   screenshotted so layout bugs could be caught visually before commit. That loop is
+   what caught centre-aligned item names, clipped avatar initials, an assign tray
+   rendering as a detached panel, and a chip labelling a 50% share as "×50".
+
+The iteration was the point, not a fallback. Turning on type-checked ESLint rules
+surfaced two real bugs (floating promises in click handlers, a context module breaking
+Fast Refresh). Splitting the work into commits surfaced another: the first attempt
+produced a commit that didn't compile, so the commits were restructured until each one
+built and passed on its own.
 
 I directed the product decisions, reviewed each layer, and chose the trade-offs
-documented above.
+documented above. Where Claude proposed something that conflicted with a decision
+already made — auto-dismissing the undo toast, adding a serverless proxy the brief had
+ruled out — it flagged the conflict rather than quietly doing it, and I made the call.
