@@ -142,7 +142,21 @@ function RateControl({
       </div>
 
       {mode === 'percent' ? (
-        <>
+        // Rate, presets and the resulting amount share one row. Stacked and
+        // stretched they left a corridor of empty card between the control and
+        // its own result.
+        <div className={styles.controlRow}>
+          <Field
+            label={`${label} rate`}
+            hideLabel
+            className={styles.rateField}
+            suffix="%"
+            numeric
+            inputMode="decimal"
+            value={percentDraft}
+            onChange={(event) => commitPercent(event.target.value)}
+            error={percentError}
+          />
           {presets && (
             <SegmentedControl
               label={`${label} presets`}
@@ -153,24 +167,10 @@ function RateControl({
                 onPercentChange(value);
               }}
               options={presets.map((value) => ({ value, label: `${value}%` }))}
-              fill
             />
           )}
-          <div className={styles.controlRow}>
-            <Field
-              label={`${label} rate`}
-              hideLabel
-              className={styles.rateField}
-              suffix="%"
-              numeric
-              inputMode="decimal"
-              value={percentDraft}
-              onChange={(event) => commitPercent(event.target.value)}
-              error={percentError}
-            />
-            <span className={styles.derived}>{formatCents(derivedCents)}</span>
-          </div>
-        </>
+          <span className={styles.derived}>{formatCents(derivedCents)}</span>
+        </div>
       ) : (
         <div className={styles.controlRow}>
           <Field
