@@ -1,4 +1,14 @@
-import type { Bill, Charges, ID, Item, Person, TipBasis } from '../domain/types';
+import { allocate } from '../domain/money';
+import type {
+  Assignment,
+  Bill,
+  Charges,
+  ID,
+  Item,
+  Person,
+  SplitMode,
+  TipBasis,
+} from '../domain/types';
 
 /* ------------------------------------------------------------------ */
 /* Initial state                                                       */
@@ -21,6 +31,7 @@ export function createEmptyBill(): Bill {
     people: [],
     items: [],
     charges: { ...DEFAULT_CHARGES },
+    payments: [],
     settledPersonIds: [],
   };
 }
@@ -56,10 +67,15 @@ export type BillAction =
   | { type: 'item/remove'; itemId: ID }
   | { type: 'item/toggleAssignee'; itemId: ID; personId: ID }
   | { type: 'item/setWeight'; itemId: ID; personId: ID; weight: number }
+  | { type: 'item/setSplitMode'; itemId: ID; mode: SplitMode }
+  | { type: 'item/setPercent'; itemId: ID; personId: ID; percent: number }
+  | { type: 'item/setAmount'; itemId: ID; personId: ID; amountCents: number }
   | { type: 'item/assignAll'; itemId: ID }
   | { type: 'item/clearAssignees'; itemId: ID }
   | { type: 'charges/set'; patch: Partial<Charges> }
   | { type: 'charges/setTipBasis'; basis: TipBasis }
+  | { type: 'payment/set'; personId: ID; amountCents: number }
+  | { type: 'payment/clearAll' }
   | { type: 'undo' };
 
 /* ------------------------------------------------------------------ */
@@ -112,6 +128,63 @@ function disambiguate(name: string, people: Person[]): string {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Recast an item's weights into the shape a mode expects, so switching modes
+ * never leaves a nonsense split behind.
+ *
+ * Percent seeding goes through `allocate` on 10000 basis points rather than
+ * `100 / n`, which is the same largest-remainder rule the money itself uses —
+ * three people get 33.34 / 33.33 / 33.33 and the column adds to exactly 100,
+ * instead of 33.33 x 3 leaving a hundredth of a percent unaccounted for.
+ */
+function toMode(assignments: Assignment[], mode: SplitMode, priceCents: number): Assignment[] {
+  if (assignments.length === 0) return assignments;
+
+  // Switching modes restates the same split in new units rather than resetting
+  // it — 2:1 shares becomes 66.67/33.33 percent becomes $20/$10 — so changing
+  // how you express a split never silently changes who pays what.
+  const current = assignments.map((a) => a.weight);
+  const base = current.some((w) => w > 0) ? current : assignments.map(() => 1);
+
+  switch (mode) {
+    case 'equal':
+      return assignments.map((a) => ({ ...a, weight: 1 }));
+
+    case 'shares': {
+      // Scale so the smallest claim lands on 1, which turns 50/30/20 into a
+      // readable 5:3:2 instead of a stepper sitting at 50.
+      const smallest = Math.min(...base.filter((w) => w > 0));
+      return assignments.map((a, index) => ({
+        ...a,
+        weight: Math.max(1, Math.round(base[index] / smallest)),
+      }));
+    }
+
+    case 'percent': {
+      const points = allocate(10000, base);
+      return assignments.map((a, index) => ({ ...a, weight: points[index] / 100 }));
+    }
+
+    case 'amount': {
+      // A free item has nothing to hand out; converting would zero every weight
+      // and drop the item into "nobody claimed this".
+      if (priceCents === 0) return assignments.map((a) => ({ ...a, weight: 1 }));
+      const cents = allocate(priceCents, base);
+      return assignments.map((a, index) => ({ ...a, weight: cents[index] }));
+    }
+  }
+}
+
+/**
+ * Restate a split after the people on it change. Only the modes whose weights
+ * have to hit a target need it; `equal` and `shares` are already relative.
+ */
+function reseed(assignments: Assignment[], mode: SplitMode, priceCents: number): Assignment[] {
+  return mode === 'percent' || mode === 'amount'
+    ? toMode(assignments, mode, priceCents)
+    : assignments;
 }
 
 function mapItem(bill: Bill, itemId: ID, fn: (item: Item) => Item): Bill {
@@ -173,6 +246,7 @@ export function billReducer(state: BillState, action: BillAction): BillState {
           ...item,
           assignments: item.assignments.filter((a) => a.personId !== action.personId),
         })),
+        payments: bill.payments.filter((p) => p.personId !== action.personId),
         settledPersonIds: bill.settledPersonIds.filter((id) => id !== action.personId),
       };
       const removed = bill.people.find((p) => p.id === action.personId);
@@ -195,6 +269,7 @@ export function billReducer(state: BillState, action: BillAction): BillState {
         id: newId('item'),
         name,
         priceCents: action.priceCents,
+        splitMode: 'equal',
         assignments: action.assignToAll
           ? bill.people.map((p) => ({ personId: p.id, weight: 1 }))
           : [],
@@ -221,12 +296,13 @@ export function billReducer(state: BillState, action: BillAction): BillState {
       return commit(
         mapItem(bill, action.itemId, (item) => {
           const claimed = item.assignments.some((a) => a.personId === action.personId);
-          return {
-            ...item,
-            assignments: claimed
-              ? item.assignments.filter((a) => a.personId !== action.personId)
-              : [...item.assignments, { personId: action.personId, weight: 1 }],
-          };
+          const next = claimed
+            ? item.assignments.filter((a) => a.personId !== action.personId)
+            : [...item.assignments, { personId: action.personId, weight: 1 }];
+          // Percentages and amounts have to add back up to their target after
+          // the party changes, so they get restated. Shares don't need it —
+          // they're relative, and 2:1 still means 2:1 with one fewer person.
+          return { ...item, assignments: reseed(next, item.splitMode, item.priceCents) };
         }),
       );
 
@@ -242,15 +318,53 @@ export function billReducer(state: BillState, action: BillAction): BillState {
       );
     }
 
-    case 'item/assignAll':
+    case 'item/setSplitMode':
       return commit(
         mapItem(bill, action.itemId, (item) => ({
           ...item,
-          assignments: bill.people.map((p) => {
+          splitMode: action.mode,
+          assignments: toMode(item.assignments, action.mode, item.priceCents),
+        })),
+      );
+
+    case 'item/setPercent': {
+      // Clamped but deliberately not normalised: forcing the other rows to
+      // rebalance as you type makes the control fight you. The tray shows the
+      // running total instead, and the split stays proportional either way.
+      const percent = Math.min(100, Math.max(0, Math.round(action.percent * 100) / 100));
+      return commit(
+        mapItem(bill, action.itemId, (item) => ({
+          ...item,
+          assignments: item.assignments.map((a) =>
+            a.personId === action.personId ? { ...a, weight: percent } : a,
+          ),
+        })),
+      );
+    }
+
+    case 'item/setAmount': {
+      // Like percentages, deliberately not normalised as you type — the tray
+      // reports what is left to assign instead of shuffling the other rows.
+      const amountCents = Math.max(0, Math.round(action.amountCents));
+      return commit(
+        mapItem(bill, action.itemId, (item) => ({
+          ...item,
+          assignments: item.assignments.map((a) =>
+            a.personId === action.personId ? { ...a, weight: amountCents } : a,
+          ),
+        })),
+      );
+    }
+
+    case 'item/assignAll':
+      return commit(
+        mapItem(bill, action.itemId, (item) => {
+          const next = bill.people.map((p) => {
             const existing = item.assignments.find((a) => a.personId === p.id);
             return { personId: p.id, weight: existing?.weight ?? 1 };
-          }),
-        })),
+          });
+          return { ...item, assignments: reseed(next, item.splitMode, item.priceCents) };
+        }),
       );
 
     case 'item/clearAssignees':
@@ -263,6 +377,25 @@ export function billReducer(state: BillState, action: BillAction): BillState {
 
     case 'charges/setTipBasis':
       return commit({ ...bill, charges: { ...bill.charges, tipBasis: action.basis } });
+
+    /* ---- Payments ---- */
+
+    case 'payment/set': {
+      // One row per person, so paying is idempotent: setting an amount
+      // replaces what was there rather than stacking a second payment.
+      const amountCents = Math.max(0, Math.round(action.amountCents));
+      const others = bill.payments.filter((p) => p.personId !== action.personId);
+      return commit({
+        ...bill,
+        payments:
+          amountCents === 0 ? others : [...others, { personId: action.personId, amountCents }],
+      });
+    }
+
+    case 'payment/clearAll':
+      return bill.payments.length === 0
+        ? state
+        : withUndo(state, 'Payments cleared', { ...bill, payments: [] });
 
     /* ---- Undo ---- */
 

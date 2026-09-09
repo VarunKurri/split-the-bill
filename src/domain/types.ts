@@ -21,12 +21,45 @@ export interface Assignment {
   weight: number;
 }
 
+/**
+ * How an item's weights were arrived at.
+ *
+ * This is an editing affordance, not a second allocation model: every mode
+ * resolves to the same weight vector, so `allocate()` stays the only place
+ * money is ever divided.
+ *
+ * - `equal`   — every weight is 1.
+ * - `shares`  — whole numbers. "He had two thirds" is `[2, 1]`.
+ * - `percent` — percentages, which are weights that add up to 100.
+ * - `amount`  — exact cents per person, which are weights that add up to the
+ *   item's price. The only mode where the weights carry a unit.
+ */
+export type SplitMode = 'equal' | 'shares' | 'percent' | 'amount';
+
 export interface Item {
   id: ID;
   name: string;
   /** Line total in integer cents — never a float. */
   priceCents: number;
+  splitMode: SplitMode;
   assignments: Assignment[];
+}
+
+/**
+ * Money someone actually handed over — one card at the end, or four people
+ * chipping in. Separate from what they owe: the gap between the two is the
+ * whole point of settling up.
+ */
+export interface Payment {
+  personId: ID;
+  amountCents: number;
+}
+
+/** One "A pays B" instruction in the settle-up plan. */
+export interface Transfer {
+  fromPersonId: ID;
+  toPersonId: ID;
+  amountCents: number;
 }
 
 export type ChargeMode = 'percent' | 'amount';
@@ -50,6 +83,7 @@ export interface Bill {
   people: Person[];
   items: Item[];
   charges: Charges;
+  payments: Payment[];
   settledPersonIds: ID[];
 }
 
@@ -78,6 +112,14 @@ export interface PersonBreakdown {
    */
   roundingCents: number;
   totalCents: number;
+  /** What this person actually paid towards the bill. */
+  paidCents: number;
+  /**
+   * `paid - owed`. Positive means the group owes them money back; negative
+   * means they still owe. Sums to zero across everyone once the bill is
+   * fully covered.
+   */
+  netCents: number;
 }
 
 export interface BillSummary {
@@ -95,4 +137,14 @@ export interface BillSummary {
   perPerson: PersonBreakdown[];
   /** True when Σ person totals + unclaimed value equals the bill total exactly. */
   reconciles: boolean;
+  /** Total recorded against the bill, across everyone who paid. */
+  paidCents: number;
+  /**
+   * `total - paid`. Positive means the table still owes the restaurant that
+   * much; negative means it has overpaid. Never silently absorbed into
+   * somebody's share.
+   */
+  unpaidCents: number;
+  /** Who pays whom to square everyone up, in as few transfers as possible. */
+  transfers: Transfer[];
 }

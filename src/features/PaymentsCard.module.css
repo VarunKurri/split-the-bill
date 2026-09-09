@@ -1,0 +1,114 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  color: var(--color-text-primary);
+}
+
+/* Net position: what the group owes them back, or what they still owe. */
+.netUp,
+.netDown {
+  flex: none;
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.netUp {
+  color: var(--color-text-success);
+}
+.netDown {
+  color: var(--color-text-secondary);
+}
+
+.amountField {
+  width: 104px;
+  flex: none;
+}
+
+.tally {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Settle-up plan ---- */
+.settle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding-top: var(--space-sm);
+  border-top: 1px dashed var(--color-border-subtle);
+}
+
+.settleLabel {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.transfers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transfer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-2xs) var(--space-xs);
+  background: var(--color-bg-inset);
+  border-radius: var(--radius-md);
+}
+
+.transferText {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  color: var(--color-text-secondary);
+}
+
+.transferText strong {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.transferAmount {
+  flex: none;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}

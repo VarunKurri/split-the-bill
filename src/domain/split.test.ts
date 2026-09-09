@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { calculateSplit, perShareCents } from './split';
+import { amountGapCents, calculateSplit, perShareCents, splitIsBalanced } from './split';
 import { sum } from './money';
-import type { Bill, Charges, Item, Person } from './types';
+import type { Bill, Charges, Item, Payment, Person } from './types';
 
 const NO_CHARGES: Charges = {
   taxMode: 'percent',
@@ -22,17 +22,24 @@ function item(id: string, name: string, priceCents: number, ...owners: string[])
     id,
     name,
     priceCents,
+    splitMode: 'equal',
     assignments: owners.map((personId) => ({ personId, weight: 1 })),
   };
 }
 
-function bill(people: Person[], items: Item[], charges: Charges = NO_CHARGES): Bill {
+function bill(
+  people: Person[],
+  items: Item[],
+  charges: Charges = NO_CHARGES,
+  payments: Payment[] = [],
+): Bill {
   return {
     name: 'Test bill',
     createdAt: '2026-09-08T00:00:00.000Z',
     people,
     items,
     charges,
+    payments,
     settledPersonIds: [],
   };
 }
@@ -62,6 +69,7 @@ describe('calculateSplit — item assignment', () => {
       id: 'i1',
       name: 'Whole fish',
       priceCents: 3000,
+      splitMode: 'shares',
       assignments: [
         { personId: 'a', weight: 2 },
         { personId: 'b', weight: 1 },
@@ -287,11 +295,211 @@ describe('perShareCents', () => {
         id: 'i1',
         name: 'Uneven',
         priceCents: 3000,
+        splitMode: 'shares',
         assignments: [
           { personId: 'a', weight: 2 },
           { personId: 'b', weight: 1 },
         ],
       }),
     ).toBeNull();
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Percent splits                                                      */
+/* ------------------------------------------------------------------ */
+
+function percentItem(priceCents: number, percents: Record<string, number>, id = 'i1'): Item {
+  return {
+    id,
+    name: 'Percent item',
+    priceCents,
+    splitMode: 'percent',
+    assignments: Object.entries(percents).map(([personId, weight]) => ({ personId, weight })),
+  };
+}
+
+describe('calculateSplit — percent splits', () => {
+  const three = [person('a', 'Alex'), person('b', 'Bri'), person('c', 'Chidi')];
+
+  it('divides by the percentages given', () => {
+    const result = calculateSplit(bill(three, [percentItem(10000, { a: 50, b: 30, c: 20 })]));
+    expect(result.perPerson.map((p) => p.subtotalCents)).toEqual([5000, 3000, 2000]);
+  });
+
+  it('keeps every cent when the percentages do not divide evenly', () => {
+    const result = calculateSplit(
+      bill(three, [percentItem(1000, { a: 33.34, b: 33.33, c: 33.33 })]),
+    );
+    expect(sum(result.perPerson.map((p) => p.subtotalCents))).toBe(1000);
+  });
+
+  it('still allocates the exact item total when percentages do not sum to 100', () => {
+    // Someone typed 40/40/40. The split stays proportional and the item is
+    // fully allocated rather than over- or under-charging the table.
+    const result = calculateSplit(bill(three, [percentItem(9000, { a: 40, b: 40, c: 40 })]));
+    expect(sum(result.perPerson.map((p) => p.subtotalCents))).toBe(9000);
+    expect(result.perPerson.map((p) => p.subtotalCents)).toEqual([3000, 3000, 3000]);
+    expect(result.reconciles).toBe(true);
+  });
+
+  it('drops a zero-percent claimant instead of charging them nothing forever', () => {
+    const result = calculateSplit(bill(three, [percentItem(1000, { a: 60, b: 40, c: 0 })]));
+    expect(result.perPerson[2].subtotalCents).toBe(0);
+    expect(result.perPerson[2].lines).toHaveLength(0);
+  });
+
+  it('treats an all-zero percent item as unassigned', () => {
+    const result = calculateSplit(bill(three, [percentItem(1000, { a: 0, b: 0, c: 0 })]));
+    expect(result.unassignedCents).toBe(1000);
+    expect(result.reconciles).toBe(true);
+  });
+
+  it('labels the share as the effective percentage', () => {
+    const result = calculateSplit(bill(three, [percentItem(10000, { a: 50, b: 30, c: 20 })]));
+    expect(result.perPerson[0].lines[0].shareLabel).toBe('50%');
+    expect(result.perPerson[2].lines[0].shareLabel).toBe('20%');
+  });
+
+  it('labels the effective share, not the typed one, when percentages are off', () => {
+    // 40/40/40 really means a third each.
+    const result = calculateSplit(bill(three, [percentItem(9000, { a: 40, b: 40, c: 40 })]));
+    expect(result.perPerson[0].lines[0].shareLabel).toBe('33.3%');
+  });
+});
+
+describe('calculateSplit — amount splits', () => {
+  const three = [person('a', 'Alex'), person('b', 'Bri'), person('c', 'Chidi')];
+
+  function amountItem(priceCents: number, cents: Record<string, number>): Item {
+    return {
+      id: 'i1',
+      name: 'Amount item',
+      priceCents,
+      splitMode: 'amount',
+      assignments: Object.entries(cents).map(([personId, weight]) => ({ personId, weight })),
+    };
+  }
+
+  it('charges each person exactly the amount entered when they add up', () => {
+    const result = calculateSplit(bill(three, [amountItem(3000, { a: 1500, b: 1000, c: 500 })]));
+    expect(result.perPerson.map((p) => p.subtotalCents)).toEqual([1500, 1000, 500]);
+  });
+
+  it('still allocates the whole item when the amounts fall short', () => {
+    // $10 + $10 entered against a $30 plate.
+    const result = calculateSplit(
+      bill(three.slice(0, 2), [amountItem(3000, { a: 1000, b: 1000 })]),
+    );
+    expect(sum(result.perPerson.map((p) => p.subtotalCents))).toBe(3000);
+    expect(result.reconciles).toBe(true);
+  });
+
+  it('reports how far an amount split is from covering the item', () => {
+    expect(amountGapCents(amountItem(3000, { a: 1000, b: 1000 }))).toBe(1000);
+    expect(amountGapCents(amountItem(3000, { a: 2000, b: 2000 }))).toBe(-1000);
+    expect(amountGapCents(amountItem(3000, { a: 1500, b: 1500 }))).toBe(0);
+  });
+
+  it('knows when a split balances', () => {
+    expect(splitIsBalanced(amountItem(3000, { a: 1500, b: 1500 }))).toBe(true);
+    expect(splitIsBalanced(amountItem(3000, { a: 1000, b: 1000 }))).toBe(false);
+    expect(splitIsBalanced(percentItem(3000, { a: 50, b: 50 }))).toBe(true);
+    expect(splitIsBalanced(percentItem(3000, { a: 40, b: 40 }))).toBe(false);
+    // Equal and shares have no target to miss.
+    expect(splitIsBalanced(item('i1', 'Even', 3000, 'a', 'b'))).toBe(true);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Payments and settling up                                            */
+/* ------------------------------------------------------------------ */
+
+describe('calculateSplit — payments', () => {
+  const two = [person('a', 'Alex'), person('b', 'Bri')];
+  const items = [item('i1', 'Steak', 4000, 'a'), item('i2', 'Pasta', 2000, 'b')];
+
+  it('reports nobody as having paid when no payments are recorded', () => {
+    const result = calculateSplit(bill(two, items));
+    expect(result.paidCents).toBe(0);
+    expect(result.unpaidCents).toBe(6000);
+    expect(result.transfers).toEqual([]);
+    expect(result.perPerson.every((p) => p.paidCents === 0)).toBe(true);
+  });
+
+  it('nets what a person paid against what they owe', () => {
+    const result = calculateSplit(
+      bill(two, items, NO_CHARGES, [{ personId: 'a', amountCents: 6000 }]),
+    );
+
+    expect(result.perPerson[0].paidCents).toBe(6000);
+    expect(result.perPerson[0].netCents).toBe(2000); // paid 60, owed 40
+    expect(result.perPerson[1].netCents).toBe(-2000);
+    expect(result.unpaidCents).toBe(0);
+  });
+
+  it('produces the transfer that squares the table up', () => {
+    const result = calculateSplit(
+      bill(two, items, NO_CHARGES, [{ personId: 'a', amountCents: 6000 }]),
+    );
+
+    expect(result.transfers).toEqual([{ fromPersonId: 'b', toPersonId: 'a', amountCents: 2000 }]);
+  });
+
+  it('needs no transfers when everyone paid their own way', () => {
+    const result = calculateSplit(
+      bill(two, items, NO_CHARGES, [
+        { personId: 'a', amountCents: 4000 },
+        { personId: 'b', amountCents: 2000 },
+      ]),
+    );
+
+    expect(result.transfers).toEqual([]);
+    expect(result.unpaidCents).toBe(0);
+  });
+
+  it('reports a shortfall rather than absorbing it into someone else', () => {
+    const result = calculateSplit(
+      bill(two, items, NO_CHARGES, [{ personId: 'a', amountCents: 5000 }]),
+    );
+
+    expect(result.unpaidCents).toBe(1000);
+    // Alex covered 10 of Bri's 20, so Bri owes Alex 10 and the restaurant 10.
+    expect(sum(result.transfers.map((t) => t.amountCents))).toBe(1000);
+  });
+
+  it('reports an overpayment as a negative shortfall', () => {
+    const result = calculateSplit(
+      bill(two, items, NO_CHARGES, [{ personId: 'a', amountCents: 8000 }]),
+    );
+    expect(result.unpaidCents).toBe(-2000);
+  });
+
+  it('ignores payments from someone no longer on the bill', () => {
+    const result = calculateSplit(
+      bill(two, items, NO_CHARGES, [{ personId: 'ghost', amountCents: 9999 }]),
+    );
+    expect(result.paidCents).toBe(0);
+    expect(result.unpaidCents).toBe(6000);
+  });
+
+  it('sums repeat payments from the same person', () => {
+    const result = calculateSplit(
+      bill(two, items, NO_CHARGES, [
+        { personId: 'a', amountCents: 1000 },
+        { personId: 'a', amountCents: 2500 },
+      ]),
+    );
+    expect(result.perPerson[0].paidCents).toBe(3500);
+  });
+
+  it('nets to zero across everyone once the bill is covered', () => {
+    const result = calculateSplit(
+      bill(two, items, NO_CHARGES, [
+        { personId: 'a', amountCents: 3000 },
+        { personId: 'b', amountCents: 3000 },
+      ]),
+    );
+    expect(sum(result.perPerson.map((p) => p.netCents))).toBe(0);
   });
 });

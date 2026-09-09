@@ -1,5 +1,6 @@
 import { ChargesCard } from './features/ChargesCard';
 import { ItemsCard } from './features/ItemsCard';
+import { PaymentsCard } from './features/PaymentsCard';
 import { PeopleCard } from './features/PeopleCard';
 import { SummaryCard } from './features/SummaryCard';
 import { TopBar } from './features/TopBar';
@@ -28,6 +29,7 @@ export default function App() {
           <aside className={styles.rail} aria-label="Bill summary">
             <ChargesCard />
             <SummaryCard />
+            <PaymentsCard />
           </aside>
         </main>
         <UndoToast />

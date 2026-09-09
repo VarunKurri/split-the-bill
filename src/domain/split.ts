@@ -1,5 +1,15 @@
 import { allocate, exactShare, percentOf, sum } from './money';
-import type { Bill, BillSummary, Charges, ID, Item, PersonBreakdown, PersonLine } from './types';
+import { settle } from './settle';
+import type {
+  Bill,
+  BillSummary,
+  Charges,
+  ID,
+  Item,
+  PersonBreakdown,
+  PersonLine,
+  SplitMode,
+} from './types';
 
 /**
  * The whole calculation, as one pure function of the bill.
@@ -18,6 +28,10 @@ import type { Bill, BillSummary, Charges, ID, Item, PersonBreakdown, PersonLine 
  *    phantom claimant. Their tax and tip stay unclaimed rather than being
  *    silently redistributed onto the people who have already been assigned —
  *    so nobody is quietly overcharged for a plate nobody has owned up to.
+ *
+ * An item's split mode (equal, shares, percent) does not appear here on
+ * purpose: all three are just ways of arriving at the weight vector, and the
+ * arithmetic below is identical whichever was used.
  */
 export function calculateSplit(bill: Bill): BillSummary {
   const { people, items, charges } = bill;
@@ -49,7 +63,7 @@ export function calculateSplit(bill: Bill): BillSummary {
       personLines.get(claim.personId)?.push({
         itemId: item.id,
         itemName: item.name,
-        shareLabel: claims.length === 1 ? 'full' : `${claim.weight}/${totalWeight}`,
+        shareLabel: shareLabel(item.splitMode, claims.length, claim.weight, totalWeight),
         amountCents,
       });
     });
@@ -69,6 +83,20 @@ export function calculateSplit(bill: Bill): BillSummary {
   const taxShares = allocate(taxCents, chargeWeights);
   const tipShares = allocate(tipCents, chargeWeights);
 
+  // ---- 4. What each person actually paid --------------------------------
+  // Payments naming somebody who has since left the bill are dropped, for the
+  // same reason stale assignments are: the engine must not be the thing that
+  // turns an old localStorage payload into a wrong total.
+  const known = new Set(people.map((p) => p.id));
+  const paidByPerson = new Map<ID, number>();
+  for (const payment of bill.payments) {
+    if (!known.has(payment.personId)) continue;
+    paidByPerson.set(
+      payment.personId,
+      (paidByPerson.get(payment.personId) ?? 0) + payment.amountCents,
+    );
+  }
+
   const perPerson: PersonBreakdown[] = people.map((person, index) => {
     const subtotal = personSubtotals.get(person.id) ?? 0;
     const tax = taxShares[index];
@@ -78,6 +106,9 @@ export function calculateSplit(bill: Bill): BillSummary {
     const exactTip = exactShare(tipCents, subtotal, totalChargeWeight);
     const roundingCents = Math.round(tax + tip - (exactTax + exactTip));
 
+    const owed = subtotal + tax + tip;
+    const paid = paidByPerson.get(person.id) ?? 0;
+
     return {
       personId: person.id,
       lines: personLines.get(person.id) ?? [],
@@ -85,13 +116,18 @@ export function calculateSplit(bill: Bill): BillSummary {
       taxCents: tax,
       tipCents: tip,
       roundingCents,
-      totalCents: subtotal + tax + tip,
+      totalCents: owed,
+      paidCents: paid,
+      netCents: paid - owed,
     };
   });
 
   const unclaimedChargesCents = taxShares[people.length] + tipShares[people.length];
   const claimed = sum(perPerson.map((p) => p.totalCents));
   const reconciles = claimed + unassignedCents + unclaimedChargesCents === totalCents;
+
+  // ---- 5. Settle up ------------------------------------------------------
+  const paidCents = sum(perPerson.map((p) => p.paidCents));
 
   return {
     subtotalCents,
@@ -103,7 +139,36 @@ export function calculateSplit(bill: Bill): BillSummary {
     unclaimedChargesCents,
     perPerson,
     reconciles,
+    paidCents,
+    unpaidCents: totalCents - paidCents,
+    transfers: settle(perPerson.map((p) => ({ personId: p.personId, netCents: p.netCents }))),
   };
+}
+
+/**
+ * How a person's slice of an item is described in their breakdown.
+ *
+ * Percent mode reports the *effective* percentage rather than the number that
+ * was typed. When the entered percentages don't add up to 100 the money is
+ * still divided proportionally — so saying "40%" when the split actually works
+ * out to 44.4% would be a lie about where the money went.
+ */
+function shareLabel(
+  mode: SplitMode,
+  claimCount: number,
+  weight: number,
+  totalWeight: number,
+): string {
+  if (claimCount === 1) return 'full';
+  if (mode === 'percent' || mode === 'amount') {
+    const effective = totalWeight > 0 ? (weight / totalWeight) * 100 : 0;
+    return `${trimZeros(effective.toFixed(1))}%`;
+  }
+  return `${weight}/${totalWeight}`;
+}
+
+function trimZeros(value: string): string {
+  return value.replace(/\.0$/, '');
 }
 
 /**
@@ -148,4 +213,35 @@ export function perShareCents(item: Item): number | null {
   const uneven = weights.some((w) => w !== weights[0]);
   if (uneven) return null;
   return allocate(item.priceCents, weights)[0];
+}
+
+/**
+ * Sum of an item's weights. Meaningless in `equal` and `shares` mode, but in
+ * `percent` it's the percentage total and in `amount` it's the cents assigned.
+ */
+export function weightTotal(item: Item): number {
+  return sum(item.assignments.map((a) => a.weight));
+}
+
+/**
+ * Whether the numbers the user typed actually add up — to 100 for percentages,
+ * to the item's price for amounts.
+ *
+ * When they don't, the money is still divided proportionally and the item is
+ * still fully allocated; this only drives the warning. Getting the arithmetic
+ * right is not conditional on the user getting their input right.
+ */
+export function splitIsBalanced(item: Item): boolean {
+  if (item.assignments.length === 0) return true;
+  if (item.splitMode === 'percent') return Math.abs(weightTotal(item) - 100) < 0.005;
+  if (item.splitMode === 'amount') return Math.round(weightTotal(item)) === item.priceCents;
+  return true;
+}
+
+/**
+ * How far an `amount` split is from covering the item, in cents. Positive means
+ * there is still money to hand out, negative means it has been over-assigned.
+ */
+export function amountGapCents(item: Item): number {
+  return item.priceCents - Math.round(weightTotal(item));
 }

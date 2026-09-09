@@ -36,9 +36,37 @@ export function buildShareText(bill: Bill, summary: BillSummary): string {
     );
   }
 
+  // The settle-up plan is the part people actually act on, so it goes in the
+  // message rather than staying on the screen of whoever ran the app.
+  if (summary.paidCents > 0) {
+    lines.push('');
+    lines.push(`Paid: ${formatCents(summary.paidCents)} of ${formatCents(summary.totalCents)}`);
+
+    if (summary.unpaidCents > 0) {
+      lines.push(`Still owed to the restaurant: ${formatCents(summary.unpaidCents)}`);
+    } else if (summary.unpaidCents < 0) {
+      lines.push(`Overpaid by ${formatCents(-summary.unpaidCents)}`);
+    }
+
+    if (summary.transfers.length > 0) {
+      lines.push('');
+      lines.push('Settle up:');
+      for (const transfer of summary.transfers) {
+        const from = nameOf(bill, transfer.fromPersonId);
+        const to = nameOf(bill, transfer.toPersonId);
+        lines.push(`  ${from} → ${to}: ${formatCents(transfer.amountCents)}`);
+      }
+    }
+  }
+
+  lines.push('');
   lines.push('Tax and tip are shared in proportion to what each person ordered.');
 
   return lines.join('\n');
+}
+
+function nameOf(bill: Bill, personId: string): string {
+  return bill.people.find((p) => p.id === personId)?.name ?? 'Someone';
 }
 
 /**
