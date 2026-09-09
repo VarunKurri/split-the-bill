@@ -204,7 +204,7 @@ function AssignTray({ item, assignees }: { item: Item; assignees: Person[] }) {
     return (
       <div className={styles.tray}>
         <p className={styles.trayEmpty}>
-          Add people to the bill first — then you can say who had this.
+          Add people to the bill first, then you can say who had this.
         </p>
       </div>
     );
