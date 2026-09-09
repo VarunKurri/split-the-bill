@@ -10,8 +10,12 @@ npm run dev      # http://localhost:5173
 
 ```bash
 npm test         # 46 tests, mostly on the money math
+npm run verify   # typecheck + lint + format check + tests
 npm run build    # typecheck + production build
 ```
+
+Husky hooks are installed by `npm install`: pre-commit formats and lints staged
+files, pre-push runs the full `verify` suite.
 
 No backend, no accounts, no network calls. The bill lives in `localStorage` so a
 refresh mid-dinner doesn't lose it.
@@ -93,6 +97,10 @@ combinations.
 
 State is `useReducer` + context. There is no data-fetching, no server state and no
 routing, so a state library would be ceremony.
+
+Tooling is ESLint with type-checked rules, Prettier, and husky + lint-staged. The
+type-checked rules earn their keep: turning them on surfaced two floating promises in
+click handlers and a context module that quietly broke Fast Refresh.
 
 ### Design tokens
 
