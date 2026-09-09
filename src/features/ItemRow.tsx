@@ -6,7 +6,7 @@ import { PersonChip } from '../components/ui/PersonChip';
 import { allocate, formatCents } from '../domain/money';
 import { perShareCents } from '../domain/split';
 import type { Item, Person } from '../domain/types';
-import { useBill } from '../state/BillContext';
+import { useBill } from '../state/useBill';
 import styles from './ItemsCard.module.css';
 
 interface ItemRowProps {
@@ -32,11 +32,7 @@ export function ItemRow({ item }: ItemRowProps) {
   const shared = assignees.length > 1;
   const evenShare = perShareCents(item);
 
-  const rowClass = [
-    styles.row,
-    unassigned ? styles.rowUnassigned : '',
-    open ? styles.rowOpen : '',
-  ]
+  const rowClass = [styles.row, unassigned ? styles.rowUnassigned : '', open ? styles.rowOpen : '']
     .filter(Boolean)
     .join(' ');
 
@@ -117,7 +113,11 @@ function AssignTray({ item, assignees }: { item: Item; assignees: Person[] }) {
     <div className={styles.tray}>
       <div className={styles.trayHeader}>
         <span className={styles.trayLabel}>Who had this?</span>
-        <Button size="small" variant="ghost" onClick={() => dispatch({ type: 'item/assignAll', itemId: item.id })}>
+        <Button
+          size="small"
+          variant="ghost"
+          onClick={() => dispatch({ type: 'item/assignAll', itemId: item.id })}
+        >
           Everyone
         </Button>
         <Button

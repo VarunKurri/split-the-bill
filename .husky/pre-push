@@ -1,0 +1,8 @@
+# Slow gate: the whole project must typecheck, lint and pass its tests
+# before anything leaves this machine.
+#
+# The money math is the reason this exists. A cent lost in allocation is
+# invisible in review and obvious at a dinner table.
+npm run typecheck
+npm run lint
+npm run test

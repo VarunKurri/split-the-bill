@@ -1,26 +1,8 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  type Dispatch,
-  type ReactNode,
-} from 'react';
+import { useEffect, useMemo, useReducer, type ReactNode } from 'react';
 import { calculateSplit } from '../domain/split';
-import type { Bill, BillSummary, ID, Person } from '../domain/types';
-import { billReducer, createEmptyBill, type BillAction, type BillState } from './billReducer';
+import { BillContext, type BillContextValue } from './billContext';
+import { billReducer, type BillState } from './billReducer';
 import { clearStoredBill, loadBill, saveBill } from './persistence';
-
-interface BillContextValue {
-  bill: Bill;
-  summary: BillSummary;
-  undoLabel: string | null;
-  dispatch: Dispatch<BillAction>;
-  peopleById: Map<ID, Person>;
-}
-
-const BillContext = createContext<BillContextValue | null>(null);
 
 function init(): BillState {
   return { bill: loadBill(), undo: null };
@@ -50,11 +32,3 @@ export function BillProvider({ children }: { children: ReactNode }) {
 
   return <BillContext.Provider value={value}>{children}</BillContext.Provider>;
 }
-
-export function useBill(): BillContextValue {
-  const context = useContext(BillContext);
-  if (!context) throw new Error('useBill must be used inside a BillProvider');
-  return context;
-}
-
-export { createEmptyBill };

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useBill } from '../state/BillContext';
+import { useBill } from '../state/useBill';
 import { buildShareText, copyText } from './shareSummary';
 
 /**
@@ -14,11 +14,15 @@ export function useShareSummary() {
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  const share = useCallback(async () => {
-    const ok = await copyText(buildShareText(bill, summary));
-    setCopied(ok);
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setCopied(false), 2400);
+  // Returns void rather than a promise: this is handed straight to onClick,
+  // and a floating promise in an event handler is a footgun nobody needs.
+  const share = useCallback(() => {
+    void (async () => {
+      const ok = await copyText(buildShareText(bill, summary));
+      setCopied(ok);
+      window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => setCopied(false), 2400);
+    })();
   }, [bill, summary]);
 
   return { share, copied };

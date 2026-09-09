@@ -4,7 +4,7 @@ import { PeopleCard } from './features/PeopleCard';
 import { SummaryCard } from './features/SummaryCard';
 import { TopBar } from './features/TopBar';
 import { UndoToast } from './features/UndoToast';
-import { BillProvider } from './state/BillContext';
+import { BillProvider } from './state/BillProvider';
 import styles from './App.module.css';
 
 /**

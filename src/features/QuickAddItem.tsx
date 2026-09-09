@@ -2,7 +2,7 @@ import { useRef, useState, type FormEvent } from 'react';
 import { Button } from '../components/ui/Button';
 import { Field } from '../components/ui/inputs';
 import { parseCents } from '../domain/money';
-import { useBill } from '../state/BillContext';
+import { useBill } from '../state/useBill';
 import styles from './ItemsCard.module.css';
 
 /**

@@ -1,5 +1,5 @@
 import { Button } from '../components/ui/Button';
-import { useBill } from '../state/BillContext';
+import { useBill } from '../state/useBill';
 import { useShareSummary } from './useShareSummary';
 import styles from './TopBar.module.css';
 

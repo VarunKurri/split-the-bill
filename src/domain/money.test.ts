@@ -84,7 +84,7 @@ describe('allocate', () => {
   it('survives many awkward splits without drift', () => {
     for (let total = 1; total <= 500; total += 1) {
       for (let parts = 2; parts <= 9; parts += 1) {
-        const weights = new Array(parts).fill(1);
+        const weights = new Array<number>(parts).fill(1);
         const shares = allocate(total, weights);
         expect(shares.reduce((a, b) => a + b, 0)).toBe(total);
         // No share is more than one cent away from any other.
