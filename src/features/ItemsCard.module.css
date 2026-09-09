@@ -79,6 +79,8 @@
     border-color 120ms ease;
   text-align: left;
   width: 100%;
+  /* Anchors the stretched hit target below. */
+  position: relative;
 }
 
 .row:hover {
@@ -113,6 +115,20 @@
   gap: var(--space-3xs);
   /* The row is a button, so the browser would otherwise centre its text. */
   text-align: left;
+}
+
+/*
+ * "Who had this?" is the question you ask of every line, so the whole row
+ * opens the tray — including the avatars and the price, which look like part
+ * of the control and previously weren't. A stretched overlay does this without
+ * nesting the remove button inside the disclosure button, which isn't legal
+ * markup and would break both of them.
+ */
+.details::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
 }
 
 .name {
@@ -162,6 +178,9 @@
   align-items: center;
   gap: var(--space-3xs);
   flex: none;
+  /* Lifted above the row's stretched hit target so remove still works. */
+  position: relative;
+  z-index: 1;
 }
 
 .iconButton {
@@ -182,7 +201,8 @@
 }
 
 .chevron {
-  font-size: var(--font-size-base);
+  flex: none;
+  color: var(--color-text-tertiary);
   transition: transform 150ms ease;
 }
 .chevronOpen {

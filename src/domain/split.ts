@@ -122,7 +122,9 @@ export function calculateSplit(bill: Bill): BillSummary {
     };
   });
 
-  const unclaimedChargesCents = taxShares[people.length] + tipShares[people.length];
+  const unclaimedTaxCents = taxShares[people.length];
+  const unclaimedTipCents = tipShares[people.length];
+  const unclaimedChargesCents = unclaimedTaxCents + unclaimedTipCents;
   const claimed = sum(perPerson.map((p) => p.totalCents));
   const reconciles = claimed + unassignedCents + unclaimedChargesCents === totalCents;
 
@@ -137,6 +139,8 @@ export function calculateSplit(bill: Bill): BillSummary {
     tipCents,
     totalCents,
     unclaimedChargesCents,
+    unclaimedTaxCents,
+    unclaimedTipCents,
     perPerson,
     reconciles,
     paidCents,

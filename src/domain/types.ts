@@ -134,6 +134,13 @@ export interface BillSummary {
   totalCents: number;
   /** Tax + tip attributable to unassigned items — owed by nobody yet. */
   unclaimedChargesCents: number;
+  /**
+   * The two halves of `unclaimedChargesCents`, kept apart so the UI can say
+   * "$2.81 tax and $6.60 tip" rather than a single combined figure that looks
+   * wrong next to the bill's total tax.
+   */
+  unclaimedTaxCents: number;
+  unclaimedTipCents: number;
   perPerson: PersonBreakdown[];
   /** True when Σ person totals + unclaimed value equals the bill total exactly. */
   reconciles: boolean;

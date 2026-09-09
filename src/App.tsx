@@ -1,3 +1,4 @@
+import { BillCard } from './features/BillCard';
 import { ChargesCard } from './features/ChargesCard';
 import { ItemsCard } from './features/ItemsCard';
 import { PaymentsCard } from './features/PaymentsCard';
@@ -26,10 +27,16 @@ export default function App() {
             <PeopleCard />
             <ItemsCard />
           </div>
+          {/*
+            The rail reads top to bottom as the questions you ask in order:
+            what did we order, what did it come to, who has paid, and so what
+            does each person owe.
+          */}
           <aside className={styles.rail} aria-label="Bill summary">
+            <BillCard />
             <ChargesCard />
-            <SummaryCard />
             <PaymentsCard />
+            <SummaryCard />
           </aside>
         </main>
         <UndoToast />

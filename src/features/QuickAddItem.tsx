@@ -14,7 +14,10 @@ export function QuickAddItem() {
   const { bill, dispatch } = useBill();
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
-  const [shareWithAll, setShareWithAll] = useState(false);
+  // Defaults on: most plates at a table are shared, and correcting an
+  // over-assignment in the tray is one click, whereas an item that lands
+  // unassigned is easy to miss until the totals don't add up.
+  const [shareWithAll, setShareWithAll] = useState(true);
   const [touched, setTouched] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
 

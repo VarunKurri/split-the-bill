@@ -69,6 +69,9 @@
   --color-bg-accent-subtle: var(--teal-50);
   --color-bg-success-subtle: var(--green-50);
   --color-bg-warning-subtle: var(--amber-50);
+  /* Solid, for a badge that has to read against a warning-tinted row — the
+     subtle fill disappears into it. */
+  --color-bg-warning-solid: var(--amber-600);
   --color-bg-danger: var(--red-600);
   --color-bg-danger-subtle: var(--red-50);
   --color-bg-overlay: rgb(2 6 23 / 45%);
