@@ -1,3 +1,20 @@
+/*
+ * The one card in the rail, so it gets its own material rather than being a
+ * fifth white rectangle: one step off the surface every other card uses, with
+ * a firmer border to keep its edge once the fill stops doing that work.
+ *
+ * The step is in the same direction in both themes — recessed in light,
+ * raised in dark — so it reads as "a different kind of thing" either way,
+ * which is what a receipt sitting next to the working surface should be.
+ *
+ * Doubled class name only to out-specify `Card`'s own `.card` rule, since
+ * both are single-class selectors and bundle order decides otherwise.
+ */
+.card.card {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-default);
+}
+
 .lines {
   display: flex;
   flex-direction: column;
@@ -45,7 +62,8 @@
 
 .divider {
   border: none;
-  border-top: 1px solid var(--color-border-subtle);
+  /* Firmer, because a subtle border disappears on the subtle fill. */
+  border-top: 1px solid var(--color-border-default);
   margin: 0;
 }
 
