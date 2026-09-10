@@ -13,8 +13,28 @@
 .card.card {
   background: var(--color-bg-subtle);
   border-color: var(--color-border-default);
+  /*
+   * Lets the card shrink to the rail's capped height instead of overflowing
+   * it. `hidden` keeps the scrolling list inside the rounded corners.
+   */
+  min-height: 0;
+  overflow: hidden;
 }
 
+/* Everything except the item list holds its size; the list absorbs the rest. */
+.card.card > header,
+.divider,
+.totals,
+.grandTotal,
+.note {
+  flex: none;
+}
+
+/*
+ * The only thing in the card that scrolls. Subtotal, tax, tip and the total
+ * stay put underneath it — a running total that scrolls out of view is the
+ * one number you always want on screen.
+ */
 .lines {
   display: flex;
   flex-direction: column;
@@ -22,6 +42,10 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /*
