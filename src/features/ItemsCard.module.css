@@ -113,34 +113,58 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3xs);
-  /* The row is a button, so the browser would otherwise centre its text. */
   text-align: left;
+  /* Keeps the meta line from spilling under the avatars when space is tight.
+     Safe for the overlay below: that is positioned against .row, and a static
+     ancestor's overflow does not clip an absolutely positioned descendant. */
+  overflow: hidden;
 }
 
 /*
- * "Who had this?" is the question you ask of every line, so the whole row
- * opens the tray — including the avatars and the price, which look like part
- * of the control and previously weren't. A stretched overlay does this without
- * nesting the remove button inside the disclosure button, which isn't legal
- * markup and would break both of them.
+ * Editable in place. Borderless until hovered or focused, so the row still
+ * reads as a list rather than a form, and lifted above the row's hit target so
+ * clicking the name edits it instead of opening the tray.
  */
-.details::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-}
-
 .name {
   font-size: var(--font-size-md);
   line-height: var(--line-height-base);
   font-weight: 500;
   color: var(--color-text-primary);
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  padding: 1px var(--space-2xs);
+  margin-left: calc(var(--space-2xs) * -1);
+  position: relative;
+  z-index: 1;
 }
 
+.name:hover,
+.amount:hover {
+  border-color: var(--color-border-default);
+  background: var(--color-bg-surface);
+}
+
+.name:focus,
+.amount:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  background: var(--color-bg-surface);
+  box-shadow: var(--focus-ring);
+}
+
+/*
+ * The meta line is the disclosure control. "Who had this?" is the question you
+ * ask of every line, so its hit target is stretched over the whole row via the
+ * overlay below — the avatars and the empty space open the tray too. The name
+ * and price inputs and the remove button sit above that overlay, so clicking
+ * those edits or deletes instead.
+ */
 .meta {
   display: flex;
   align-items: center;
@@ -149,12 +173,15 @@
   line-height: var(--line-height-base);
   color: var(--color-text-secondary);
   min-width: 0;
-  /*
-   * The badge and chevron can't shrink, so without this the meta row spills
-   * out of its column and slides under the avatar stack instead of stopping
-   * at the edge of its own space.
-   */
-  overflow: hidden;
+  width: 100%;
+  text-align: left;
+}
+
+.meta::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
 }
 
 .metaWarning {
@@ -168,7 +195,7 @@
 }
 
 .amount {
-  width: 88px;
+  width: 96px;
   flex: none;
   text-align: right;
   font-size: var(--font-size-lg);
@@ -177,6 +204,12 @@
   letter-spacing: -0.002em;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-primary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  padding: 1px var(--space-2xs);
+  position: relative;
+  z-index: 1;
 }
 
 .assignees {
@@ -395,9 +428,11 @@
     padding: var(--space-sm);
   }
   .amount {
-    width: 76px;
+    width: 80px;
     font-size: var(--font-size-md);
     line-height: var(--line-height-base);
+    /* Padding is the cheapest thing to give up before the number clips. */
+    padding-inline: var(--space-3xs);
   }
   .tray {
     padding: var(--space-sm);
@@ -439,7 +474,8 @@
     display: none;
   }
   .amount {
-    width: 68px;
+    width: 74px;
+    font-size: var(--font-size-base);
   }
   .meta {
     gap: var(--space-2xs);
