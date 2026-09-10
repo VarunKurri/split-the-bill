@@ -249,15 +249,6 @@
   color: var(--color-text-danger);
 }
 
-.chevron {
-  flex: none;
-  color: var(--color-text-tertiary);
-  transition: transform 150ms ease;
-}
-.chevronOpen {
-  transform: rotate(180deg);
-}
-
 /* ---- Assign tray ---- */
 .tray {
   display: flex;

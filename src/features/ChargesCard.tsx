@@ -3,6 +3,7 @@ import { Card } from '../components/ui/Card';
 import { Field } from '../components/ui/inputs';
 import { SegmentedControl } from '../components/ui/SegmentedControl';
 import { centsToInput, formatCents, parseCents, parsePercent } from '../domain/money';
+import type { ChargeMode } from '../domain/types';
 import { useBill } from '../state/useBill';
 import styles from './ChargesCard.module.css';
 
@@ -71,12 +72,12 @@ export function ChargesCard() {
 
 interface RateControlProps {
   label: string;
-  mode: 'percent' | 'amount';
+  mode: ChargeMode;
   percent: number;
   cents: number;
   derivedCents: number;
   presets?: number[];
-  onModeChange: (mode: 'percent' | 'amount') => void;
+  onModeChange: (mode: ChargeMode) => void;
   onPercentChange: (percent: number) => void;
   onCentsChange: (cents: number) => void;
   footer?: React.ReactNode;

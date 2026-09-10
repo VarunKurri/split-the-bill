@@ -59,7 +59,6 @@ export type BillAction =
   | { type: 'bill/rename'; name: string }
   | { type: 'bill/reset' }
   | { type: 'person/add'; name: string }
-  | { type: 'person/rename'; personId: ID; name: string }
   | { type: 'person/remove'; personId: ID }
   | { type: 'person/toggleSettled'; personId: ID }
   | { type: 'item/add'; name: string; priceCents: number; assignToAll?: boolean }
@@ -224,15 +223,6 @@ export function billReducer(state: BillState, action: BillAction): BillState {
         colorIndex: nextColorIndex(bill.people),
       };
       return commit({ ...bill, people: [...bill.people, person] });
-    }
-
-    case 'person/rename': {
-      const name = action.name.trim();
-      if (!name) return state;
-      return commit({
-        ...bill,
-        people: bill.people.map((p) => (p.id === action.personId ? { ...p, name } : p)),
-      });
     }
 
     case 'person/remove': {

@@ -36,14 +36,6 @@
   box-shadow: var(--elevation-flat);
 }
 
-.fill {
-  display: flex;
-}
-.fill .option {
-  flex: 1;
-  text-align: center;
-}
-
 @media (max-width: 560px) {
   .option {
     padding-inline: var(--space-xs);

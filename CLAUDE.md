@@ -125,6 +125,13 @@ screen frames were never built — the Figma Starter plan caps MCP tool calls at
 month and that budget was spent on the system. The screen specs live in the design
 spec doc in the Claude project attached to this work, and the built UI follows them.
 
+A design-system variant with no current caller is not dead code. `Avatar` still has a
+`large` size and `Badge` still has `brand` and `danger` tones because those variants
+exist in the Figma component sets, and the 1:1 mapping is what lets Code Connect be
+wired later without renaming. Delete an unused variant only when it goes from Figma
+too. Everything outside `components/ui/` gets no such protection — `SegmentedControl`
+is not one of the seven sets, so its unused `fill` variant was removed.
+
 If the Figma quota is available again and you're asked to sync design and code:
 components in `src/components/ui/` map 1:1 onto the Figma component sets by name, and
 the CSS custom property names match the Figma variable code-syntax fields, so Code

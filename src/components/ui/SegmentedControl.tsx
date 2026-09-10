@@ -10,7 +10,6 @@ interface SegmentedControlProps<T extends string | number> {
   value: T | null;
   onChange: (value: T) => void;
   label: string;
-  fill?: boolean;
 }
 
 /** Used for the tip presets and the percent/amount toggles. */
@@ -19,14 +18,9 @@ export function SegmentedControl<T extends string | number>({
   value,
   onChange,
   label,
-  fill = false,
 }: SegmentedControlProps<T>) {
   return (
-    <div
-      className={[styles.group, fill ? styles.fill : ''].filter(Boolean).join(' ')}
-      role="group"
-      aria-label={label}
-    >
+    <div className={styles.group} role="group" aria-label={label}>
       {options.map((option) => {
         const selected = option.value === value;
         return (

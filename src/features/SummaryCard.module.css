@@ -167,8 +167,3 @@
 .reconcileBad {
   color: var(--color-text-danger);
 }
-
-.copied {
-  color: var(--color-text-success);
-  font-size: var(--font-size-base);
-}
