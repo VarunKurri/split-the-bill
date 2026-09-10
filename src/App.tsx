@@ -36,7 +36,7 @@ export default function App() {
             <SummaryCard />
           </div>
           {/* The rail holds one thing: the bill as the restaurant printed it. */}
-          <aside className={styles.rail} aria-label="The bill">
+          <aside className={styles.rail} aria-label="The Bill">
             <BillCard />
           </aside>
         </main>

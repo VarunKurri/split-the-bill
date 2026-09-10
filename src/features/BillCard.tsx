@@ -22,7 +22,7 @@ export function BillCard() {
   const { charges } = bill;
 
   return (
-    <Card title="The bill" className={styles.card}>
+    <Card title="The Bill" className={styles.card}>
       <ul className={styles.lines}>
         {bill.items.map((item) => (
           <li className={styles.line} key={item.id}>
