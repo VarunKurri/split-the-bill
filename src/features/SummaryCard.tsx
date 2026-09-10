@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Avatar } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
+import { Chevron } from '../components/ui/Chevron';
 import { formatCents } from '../domain/money';
 import type { PersonBreakdown, Person } from '../domain/types';
 import { useBill } from '../state/useBill';
@@ -90,6 +91,23 @@ function PersonSummary({
 }: PersonSummaryProps) {
   const sharedCount = breakdown.lines.filter((line) => line.shareLabel !== 'full').length;
   const itemCount = breakdown.lines.length;
+  const rowRef = useRef<HTMLLIElement>(null);
+
+  /*
+   * "Everyone owes" is the last card on the page, so on a phone you are
+   * usually scrolled to the bottom when you tap a name. The panel opens
+   * downward, the page grows, and the browser holds the scroll position — so
+   * everything appears to jump upward and the thing you just opened is off
+   * screen. Pulling the row back into view is what makes it read as opening
+   * downward, which is what it is actually doing.
+   */
+  useEffect(() => {
+    if (!open) return;
+    rowRef.current?.scrollIntoView({
+      block: 'nearest',
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    });
+  }, [open]);
 
   const meta = settled
     ? 'Settled up'
@@ -101,6 +119,7 @@ function PersonSummary({
 
   return (
     <li
+      ref={rowRef}
       className={[styles.person, open ? styles.personOpen : '', settled ? styles.personSettled : '']
         .filter(Boolean)
         .join(' ')}
@@ -114,6 +133,7 @@ function PersonSummary({
         <span className={`${styles.total} ${settled ? styles.totalSettled : ''}`}>
           {formatCents(breakdown.totalCents)}
         </span>
+        <Chevron open={open} />
       </button>
 
       {open && (
