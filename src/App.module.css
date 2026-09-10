@@ -29,8 +29,14 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
-  position: sticky;
-  top: calc(var(--layout-topbar-height) + var(--space-2xl));
+}
+
+/*
+ * The bill card hides itself until there is something on the bill, which would
+ * otherwise leave a 400px column of nothing next to the empty state.
+ */
+.rail:empty {
+  display: none;
 }
 
 @media (max-width: 1100px) {
@@ -42,11 +48,7 @@
   }
 }
 
-/*
- * Below 900px the rail stops being a rail. It goes under the main column and
- * loses `position: sticky` — a sticky block that is taller than the viewport
- * just sits there and steals the screen on a phone.
- */
+/* Below 900px the rail stops being a rail and goes under the main column. */
 @media (max-width: 900px) {
   .body {
     flex-direction: column;
@@ -62,7 +64,6 @@
   }
   .rail {
     width: 100%;
-    position: static;
   }
 }
 

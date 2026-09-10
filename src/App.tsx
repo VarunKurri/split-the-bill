@@ -24,19 +24,20 @@ export default function App() {
         <TopBar />
         <main className={styles.body}>
           {/*
-            The main column is everything you enter: who is here, what was
-            ordered, what the restaurant added, and what has been paid.
+            The main column is the whole working surface, top to bottom: who is
+            here, what was ordered, what the restaurant added, who has paid, and
+            what each person ends up owing.
           */}
           <div className={styles.main}>
             <PeopleCard />
             <ItemsCard />
             <ChargesCard />
             <PaymentsCard />
-          </div>
-          {/* The rail is everything the app works out from it. */}
-          <aside className={styles.rail} aria-label="Bill summary">
-            <BillCard />
             <SummaryCard />
+          </div>
+          {/* The rail holds one thing: the bill as the restaurant printed it. */}
+          <aside className={styles.rail} aria-label="The bill">
+            <BillCard />
           </aside>
         </main>
         <UndoToast />
