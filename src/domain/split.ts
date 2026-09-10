@@ -202,14 +202,6 @@ function resolveTip(charges: Charges, subtotalCents: number, taxCents: number): 
 /* Small selectors used by the UI                                      */
 /* ------------------------------------------------------------------ */
 
-export function isUnassigned(item: Item): boolean {
-  return item.assignments.length === 0;
-}
-
-export function isShared(item: Item): boolean {
-  return item.assignments.length > 1;
-}
-
 /** Per-share amount for an evenly shared item, for the "$14.00 each" hint. */
 export function perShareCents(item: Item): number | null {
   if (item.assignments.length < 2) return null;
