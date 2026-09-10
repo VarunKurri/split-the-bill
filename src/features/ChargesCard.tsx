@@ -13,7 +13,7 @@ export function ChargesCard() {
   const { charges } = bill;
 
   return (
-    <Card title="Tax &amp; tip">
+    <Card title="Tax &amp; Tip">
       <div className={styles.line}>
         <span className={styles.lineLabel}>Subtotal</span>
         <span className={styles.lineValue}>{formatCents(summary.subtotalCents)}</span>

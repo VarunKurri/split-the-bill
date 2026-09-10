@@ -17,7 +17,7 @@ export function SummaryCard() {
 
   if (bill.people.length === 0) {
     return (
-      <Card title="Everyone owes">
+      <Card title="Everyone Owes">
         <p className={styles.empty}>
           Add people and they'll show up here with a running total as you assign items.
         </p>
@@ -27,7 +27,7 @@ export function SummaryCard() {
 
   return (
     <Card
-      title="Everyone owes"
+      title="Everyone Owes"
       trailing={
         summary.unassignedItemIds.length > 0 ? (
           <Badge tone="warning">{summary.unassignedItemIds.length} unassigned</Badge>
@@ -94,7 +94,7 @@ function PersonSummary({
   const rowRef = useRef<HTMLLIElement>(null);
 
   /*
-   * "Everyone owes" is the last card on the page, so on a phone you are
+   * "Everyone Owes" is the last card on the page, so on a phone you are
    * usually scrolled to the bottom when you tap a name. The panel opens
    * downward, the page grows, and the browser holds the scroll position — so
    * everything appears to jump upward and the thing you just opened is off

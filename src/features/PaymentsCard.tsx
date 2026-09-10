@@ -28,7 +28,7 @@ export function PaymentsCard() {
 
   return (
     <Card
-      title="Who paid?"
+      title="Who Paid?"
       trailing={
         paidCents === 0 ? null : covered ? (
           <Badge tone="success">Covered</Badge>
