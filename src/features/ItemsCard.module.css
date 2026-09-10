@@ -149,6 +149,12 @@
   line-height: var(--line-height-base);
   color: var(--color-text-secondary);
   min-width: 0;
+  /*
+   * The badge and chevron can't shrink, so without this the meta row spills
+   * out of its column and slides under the avatar stack instead of stopping
+   * at the edge of its own space.
+   */
+  overflow: hidden;
 }
 
 .metaWarning {
@@ -171,6 +177,11 @@
   letter-spacing: -0.002em;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-primary);
+}
+
+.assignees {
+  display: inline-flex;
+  flex: none;
 }
 
 .rowActions {
@@ -377,8 +388,10 @@
  * makes a list of six items twice as long to scan.
  */
 @media (max-width: 560px) {
+  /* Tighter gaps buy back the ~30px the avatars, price and remove button need
+     before the badge starts colliding with them. */
   .row {
-    gap: var(--space-sm);
+    gap: var(--space-xs);
     padding: var(--space-sm);
   }
   .amount {
@@ -423,6 +436,23 @@
  */
 @media (max-width: 420px) {
   .metaText {
+    display: none;
+  }
+  .amount {
+    width: 68px;
+  }
+  .meta {
+    gap: var(--space-2xs);
+  }
+}
+
+/*
+ * Smallest phones. The avatars go: the badge already says how many people are
+ * on the line, and tapping the row says exactly who. Keeping them would push
+ * the disclosure arrow out of the row, which costs more than it gives.
+ */
+@media (max-width: 360px) {
+  .assignees {
     display: none;
   }
 }

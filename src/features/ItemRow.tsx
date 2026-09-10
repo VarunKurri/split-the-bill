@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AvatarStack } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
+import { Chevron } from '../components/ui/Chevron';
 import { PersonChip } from '../components/ui/PersonChip';
 import { SegmentedControl } from '../components/ui/SegmentedControl';
 import { Field } from '../components/ui/inputs';
@@ -158,24 +159,13 @@ export function ItemRow({ item }: ItemRowProps) {
             {unassigned && <Badge tone="warningSolid">Nobody yet</Badge>}
             {shared && <Badge tone="neutral">Shared &times; {assignees.length}</Badge>}
             <span className={styles.metaText}>{summaryText(item, assignees, evenShare)}</span>
-            <svg
-              className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`}
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m6 9 6 6 6-6" />
-            </svg>
+            <Chevron open={open} />
           </span>
         </button>
 
-        <AvatarStack people={assignees} />
+        <span className={styles.assignees}>
+          <AvatarStack people={assignees} />
+        </span>
 
         <span className={styles.amount}>{formatCents(item.priceCents)}</span>
 

@@ -46,8 +46,15 @@
   line-height: var(--line-height-base);
   font-weight: 500;
   color: var(--color-text-primary);
-  min-width: 8ch;
   max-width: 28ch;
+  /*
+   * The name is the only elastic thing in the bar, so it absorbs the squeeze:
+   * it shrinks to nothing rather than pushing the buttons off screen, and
+   * ellipses instead of clipping a word mid-letter.
+   */
+  flex: 0 1 auto;
+  min-width: 0;
+  text-overflow: ellipsis;
 }
 
 .nameInput:hover {
@@ -108,10 +115,6 @@
   .meta {
     display: none;
   }
-  .nameInput {
-    min-width: 6ch;
-    max-width: 16ch;
-  }
 }
 
 @media (max-width: 620px) {
@@ -123,18 +126,9 @@
   .wordmark {
     display: none;
   }
-  .nameInput {
-    min-width: 0;
-    max-width: 14ch;
-    flex: 0 1 auto;
-    min-inline-size: 0;
-  }
 }
 
 @media (max-width: 420px) {
-  .nameInput {
-    max-width: 10ch;
-  }
   .actions {
     gap: var(--space-3xs);
   }
@@ -144,9 +138,6 @@
 @media (max-width: 380px) {
   .bar {
     padding-inline: var(--space-sm);
-  }
-  .nameInput {
-    max-width: 8ch;
   }
   .actions button {
     padding-inline: var(--space-xs);

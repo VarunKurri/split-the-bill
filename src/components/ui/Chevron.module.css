@@ -1,0 +1,9 @@
+.chevron {
+  flex: none;
+  color: var(--color-text-tertiary);
+  transition: transform 150ms ease;
+}
+
+.open {
+  transform: rotate(180deg);
+}

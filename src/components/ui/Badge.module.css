@@ -36,3 +36,12 @@
   background: var(--color-bg-danger-subtle);
   color: var(--color-text-danger);
 }
+
+/* On a phone the item row has ~95px for its badge plus disclosure arrow, so
+   the badge trades padding and a point of type for the arrow staying visible. */
+@media (max-width: 420px) {
+  .badge {
+    padding-inline: var(--space-2xs);
+    font-size: var(--font-size-xs);
+  }
+}
