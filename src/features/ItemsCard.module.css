@@ -114,10 +114,10 @@
   flex-direction: column;
   gap: var(--space-3xs);
   text-align: left;
-  /* Keeps the meta line from spilling under the avatars when space is tight.
-     Safe for the overlay below: that is positioned against .row, and a static
-     ancestor's overflow does not clip an absolutely positioned descendant. */
-  overflow: hidden;
+  /* Deliberately not clipped: the name field is pulled 4px left to keep its
+     text optically aligned with the meta line, and clipping here would eat
+     that overhang along with the field's own left border. The clipping that
+     stops the meta line spilling lives on .meta instead. */
 }
 
 /*
@@ -175,6 +175,11 @@
   min-width: 0;
   width: 100%;
   text-align: left;
+  /* The badge and chevron cannot shrink, so without this they slide under the
+     avatar stack. Safe for the overlay below: that is positioned against .row,
+     and a static ancestor's overflow does not clip an absolutely positioned
+     descendant that escapes to a higher containing block. */
+  overflow: hidden;
 }
 
 .meta::after {
