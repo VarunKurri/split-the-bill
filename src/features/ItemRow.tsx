@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { AvatarStack } from '../components/ui/Avatar';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -6,6 +6,7 @@ import { Chevron } from '../components/ui/Chevron';
 import { PersonChip } from '../components/ui/PersonChip';
 import { SegmentedControl } from '../components/ui/SegmentedControl';
 import { Field } from '../components/ui/inputs';
+import { acceptsNumericDraft } from '../components/ui/numericDraft';
 import { allocate, centsToInput, formatCents, parseCents, parsePercent } from '../domain/money';
 import { amountGapCents, perShareCents, splitIsBalanced, weightTotal } from '../domain/split';
 import type { Item, Person, SplitMode } from '../domain/types';
@@ -115,6 +116,62 @@ function AmountField({ value, label, onChange }: AmountFieldProps) {
   );
 }
 
+interface InlineEditProps {
+  value: string;
+  onCommit: (raw: string) => void;
+  label: string;
+  className: string;
+  numeric?: boolean;
+}
+
+/**
+ * A field that reads as text until you touch it.
+ *
+ * The row is a disclosure control, so the name and price cannot be plain
+ * inputs sitting inside the button — they are lifted above the row's hit
+ * target instead, which is why clicking them edits while clicking anywhere
+ * else still opens the tray.
+ *
+ * Edits commit on blur or Enter rather than per keystroke: the price feeds
+ * the totals, and watching them lurch while you retype "12" into "120" is
+ * noise. Escape abandons the edit. `cancelled` is a ref because Escape blurs
+ * synchronously, before a state update would land.
+ */
+function InlineEdit({ value, onCommit, label, className, numeric = false }: InlineEditProps) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const cancelled = useRef(false);
+
+  return (
+    <input
+      className={className}
+      aria-label={label}
+      title={label}
+      value={draft ?? value}
+      inputMode={numeric ? 'decimal' : undefined}
+      autoComplete="off"
+      onFocus={(event) => event.currentTarget.select()}
+      onChange={(event) => {
+        if (numeric && !acceptsNumericDraft(event.target.value)) return;
+        setDraft(event.target.value);
+      }}
+      onBlur={() => {
+        if (!cancelled.current && draft !== null) onCommit(draft);
+        cancelled.current = false;
+        setDraft(null);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          event.currentTarget.blur();
+        } else if (event.key === 'Escape') {
+          cancelled.current = true;
+          event.currentTarget.blur();
+        }
+      }}
+    />
+  );
+}
+
 interface ItemRowProps {
   item: Item;
 }
@@ -145,29 +202,45 @@ export function ItemRow({ item }: ItemRowProps) {
   return (
     <li>
       <div className={rowClass}>
-        <button
-          type="button"
-          className={styles.details}
-          onClick={() => setOpen((value) => !value)}
-          aria-expanded={open}
-          aria-label={`${item.name}, ${formatCents(item.priceCents)}. ${
-            unassigned ? 'Unassigned' : `Assigned to ${assignees.map((p) => p.name).join(', ')}`
-          }. Change assignment`}
-        >
-          <span className={styles.name}>{item.name}</span>
-          <span className={`${styles.meta} ${unassigned ? styles.metaWarning : ''}`}>
+        <div className={styles.details}>
+          <InlineEdit
+            className={styles.name}
+            label={`Rename ${item.name}`}
+            value={item.name}
+            onCommit={(raw) => {
+              if (raw.trim()) dispatch({ type: 'item/update', itemId: item.id, name: raw });
+            }}
+          />
+          <button
+            type="button"
+            className={`${styles.meta} ${unassigned ? styles.metaWarning : ''}`}
+            onClick={() => setOpen((value) => !value)}
+            aria-expanded={open}
+            aria-label={`${item.name}, ${formatCents(item.priceCents)}. ${
+              unassigned ? 'Unassigned' : `Assigned to ${assignees.map((p) => p.name).join(', ')}`
+            }. Change assignment`}
+          >
             {unassigned && <Badge tone="warningSolid">Nobody yet</Badge>}
             {shared && <Badge tone="neutral">Shared &times; {assignees.length}</Badge>}
             <span className={styles.metaText}>{summaryText(item, assignees, evenShare)}</span>
             <Chevron open={open} />
-          </span>
-        </button>
+          </button>
+        </div>
 
         <span className={styles.assignees}>
           <AvatarStack people={assignees} />
         </span>
 
-        <span className={styles.amount}>{formatCents(item.priceCents)}</span>
+        <InlineEdit
+          className={styles.amount}
+          label={`Change the price of ${item.name}`}
+          value={formatCents(item.priceCents)}
+          numeric
+          onCommit={(raw) => {
+            const priceCents = parseCents(raw);
+            if (priceCents !== null) dispatch({ type: 'item/update', itemId: item.id, priceCents });
+          }}
+        />
 
         <span className={styles.rowActions}>
           <button

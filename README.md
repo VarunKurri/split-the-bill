@@ -18,7 +18,7 @@ npm run dev      # http://localhost:5173
 ```
 
 ```bash
-npm test         # 107 tests, concentrated on the money math
+npm test         # 128 tests, concentrated on the money math
 npm run verify   # typecheck + lint + format check + tests
 npm run build    # typecheck + production build
 ```
@@ -35,6 +35,8 @@ refresh mid-dinner doesn't lose it.
 
 - Add people; each gets a stable colour that means only them, everywhere in the UI.
 - Add items from a keyboard-first quick-add row: name, Tab, price, Enter, repeat.
+- Fix a typo or a wrong price in place: item names and prices are editable on the
+  row itself, without deleting and re-entering the line.
 - Assign items by clicking names. Shared plates take any number of people.
 - Split a shared plate equally, by share weights, by percentage, or by exact amount —
   and see the resulting amounts as you set them. Switching between them restates the
@@ -131,7 +133,7 @@ Chip, Badge, Item Row, Summary Row).
 
 ## Testing
 
-107 tests, concentrated where being wrong actually costs something:
+128 tests, concentrated where being wrong actually costs something:
 
 - `money.test.ts` — parsing tolerance and strictness, and an exhaustive sweep proving
   allocation never creates or loses a cent.

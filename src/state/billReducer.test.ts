@@ -435,6 +435,81 @@ describe('payments', () => {
   });
 });
 
+describe('editing an item', () => {
+  function withItem() {
+    let state = run(
+      fresh(),
+      { type: 'person/add', name: 'Alex' },
+      { type: 'person/add', name: 'Bri' },
+    );
+    state = run(state, {
+      type: 'item/add',
+      name: 'Chiken Tika',
+      priceCents: 4500,
+      assignToAll: true,
+    });
+    return state;
+  }
+
+  it('renames an item', () => {
+    let state = withItem();
+    state = run(state, {
+      type: 'item/update',
+      itemId: state.bill.items[0].id,
+      name: 'Chicken Tikka',
+    });
+    expect(state.bill.items[0].name).toBe('Chicken Tikka');
+  });
+
+  it('trims a renamed item', () => {
+    let state = withItem();
+    state = run(state, { type: 'item/update', itemId: state.bill.items[0].id, name: '  Naan  ' });
+    expect(state.bill.items[0].name).toBe('Naan');
+  });
+
+  it('keeps the old name rather than accepting an empty one', () => {
+    let state = withItem();
+    state = run(state, { type: 'item/update', itemId: state.bill.items[0].id, name: '   ' });
+    expect(state.bill.items[0].name).toBe('Chiken Tika');
+  });
+
+  it('corrects a mistyped price', () => {
+    let state = withItem();
+    state = run(state, { type: 'item/update', itemId: state.bill.items[0].id, priceCents: 1200 });
+    expect(state.bill.items[0].priceCents).toBe(1200);
+  });
+
+  it('accepts a price of zero, which is not the same as no price', () => {
+    let state = withItem();
+    state = run(state, { type: 'item/update', itemId: state.bill.items[0].id, priceCents: 0 });
+    expect(state.bill.items[0].priceCents).toBe(0);
+  });
+
+  it('leaves the price alone when only the name changes', () => {
+    let state = withItem();
+    state = run(state, { type: 'item/update', itemId: state.bill.items[0].id, name: 'Naan' });
+    expect(state.bill.items[0].priceCents).toBe(4500);
+  });
+
+  it('keeps who was assigned when the price changes', () => {
+    let state = withItem();
+    const before = state.bill.items[0].assignments;
+    state = run(state, { type: 'item/update', itemId: state.bill.items[0].id, priceCents: 9900 });
+    expect(state.bill.items[0].assignments).toEqual(before);
+  });
+
+  it('ignores an edit aimed at an item that does not exist', () => {
+    const state = run(withItem(), { type: 'item/update', itemId: 'no-such-item', name: 'Nope' });
+    expect(state.bill.items[0].name).toBe('Chiken Tika');
+  });
+
+  it('offers no undo, because editing destroys nothing', () => {
+    let state = withItem();
+    state = run(state, { type: 'item/update', itemId: state.bill.items[0].id, name: 'Naan' });
+    expect(state.undo).toBeNull();
+  });
+});
+
 describe('undo', () => {
   it('is offered for destructive actions only', () => {
     let state = run(fresh(), { type: 'person/add', name: 'Alex' });

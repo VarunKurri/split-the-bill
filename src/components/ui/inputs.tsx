@@ -5,6 +5,7 @@ import {
   type InputHTMLAttributes,
   type ReactNode,
 } from 'react';
+import { acceptsNumericDraft } from './numericDraft';
 import styles from './inputs.module.css';
 
 // `size` and `prefix` are both HTML attributes we deliberately repurpose.
@@ -29,25 +30,6 @@ interface FieldProps extends BaseProps {
  * Amount variants right-align the value and carry the currency as a separate
  * affix, so a column of prices lines up on the decimal point.
  */
-/**
- * Characters a money or rate field will accept.
- *
- * This filters the resulting *value* rather than trapping keystrokes, which is
- * what makes it safe: paste, autofill, undo and IME input all go through
- * `onChange` too, so a keydown guard would block the keyboard while letting a
- * pasted "abc" straight through. Rejecting the value instead covers every
- * route in, and a rejected change simply never reaches state — the character
- * doesn't appear.
- *
- * `$`, `,` and spaces stay allowed because `parseCents` already tolerates them
- * and pasting "$1,234.50" should work. `-` is not: nothing in this app is
- * negative money.
- */
-function acceptsNumericDraft(value: string): boolean {
-  if (!/^[\d$%,.\s]*$/.test(value)) return false;
-  return (value.match(/\./g)?.length ?? 0) <= 1;
-}
-
 export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
   { label, prefix, suffix, error, numeric = false, className, hideLabel = false, ...rest },
   ref,
