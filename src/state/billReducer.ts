@@ -1,4 +1,5 @@
 import { allocate } from '../domain/money';
+import { wholeShareWeights } from '../domain/shareWeights';
 import type {
   Assignment,
   Bill,
@@ -138,27 +139,25 @@ function escapeRegExp(value: string): string {
  * three people get 33.34 / 33.33 / 33.33 and the column adds to exactly 100,
  * instead of 33.33 x 3 leaving a hundredth of a percent unaccounted for.
  */
-function toMode(assignments: Assignment[], mode: SplitMode, priceCents: number): Assignment[] {
+function toMode(
+  assignments: Assignment[],
+  mode: SplitMode,
+  priceCents: number,
+): Assignment[] | null {
   if (assignments.length === 0) return assignments;
 
-  // Switching modes restates the same split in new units rather than resetting
-  // it — 2:1 shares becomes 66.67/33.33 percent becomes $20/$10 — so changing
-  // how you express a split never silently changes who pays what.
-  const current = assignments.map((a) => a.weight);
-  const base = current.some((w) => w > 0) ? current : assignments.map(() => 1);
+  // Unequal modes restate the weights in new units. Percentages and amounts
+  // round to their supported precision; whole shares preserve the exact ratio.
+  // Only choosing equal explicitly resets everyone to the same weight.
+  const base = assignments.map((a) => a.weight);
 
   switch (mode) {
     case 'equal':
       return assignments.map((a) => ({ ...a, weight: 1 }));
 
     case 'shares': {
-      // Scale so the smallest claim lands on 1, which turns 50/30/20 into a
-      // readable 5:3:2 instead of a stepper sitting at 50.
-      const smallest = Math.min(...base.filter((w) => w > 0));
-      return assignments.map((a, index) => ({
-        ...a,
-        weight: Math.max(1, Math.round(base[index] / smallest)),
-      }));
+      const weights = wholeShareWeights(base);
+      return weights && assignments.map((a, index) => ({ ...a, weight: weights[index] }));
     }
 
     case 'percent': {
@@ -169,7 +168,10 @@ function toMode(assignments: Assignment[], mode: SplitMode, priceCents: number):
     case 'amount': {
       // A free item has nothing to hand out; converting would zero every weight
       // and drop the item into "nobody claimed this".
-      if (priceCents === 0) return assignments.map((a) => ({ ...a, weight: 1 }));
+      if (priceCents === 0) {
+        const weights = wholeShareWeights(base);
+        return weights && assignments.map((a, index) => ({ ...a, weight: weights[index] }));
+      }
       const cents = allocate(priceCents, base);
       return assignments.map((a, index) => ({ ...a, weight: cents[index] }));
     }
@@ -182,7 +184,7 @@ function toMode(assignments: Assignment[], mode: SplitMode, priceCents: number):
  */
 function reseed(assignments: Assignment[], mode: SplitMode, priceCents: number): Assignment[] {
   return mode === 'percent' || mode === 'amount'
-    ? toMode(assignments, mode, priceCents)
+    ? (toMode(assignments, mode, priceCents) ?? assignments)
     : assignments;
 }
 
@@ -198,12 +200,55 @@ function commit(bill: Bill): BillState {
   return { bill, undo: null };
 }
 
+function isCents(value: number): boolean {
+  return Number.isSafeInteger(value) && value >= 0;
+}
+
+/** These editors round and clamp finite input, but must never store NaN or infinity. */
+function isRoundable(value: number): boolean {
+  return Number.isFinite(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER;
+}
+
+function validCharges(charges: Charges): boolean {
+  return (
+    (charges.taxMode === 'percent' || charges.taxMode === 'amount') &&
+    (charges.tipMode === 'percent' || charges.tipMode === 'amount') &&
+    (charges.tipBasis === 'preTax' || charges.tipBasis === 'postTax') &&
+    isCents(charges.taxCents) &&
+    isCents(charges.tipCents) &&
+    Number.isFinite(charges.taxPercent) &&
+    charges.taxPercent >= 0 &&
+    charges.taxPercent <= 100 &&
+    Number.isFinite(charges.tipPercent) &&
+    charges.tipPercent >= 0 &&
+    charges.tipPercent <= 100
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Reducer                                                             */
 /* ------------------------------------------------------------------ */
 
 export function billReducer(state: BillState, action: BillAction): BillState {
   const { bill } = state;
+
+  // A late edit from a removed row must not create dangling references or
+  // consume the undo that would bring that row back.
+  if ('personId' in action && !bill.people.some((person) => person.id === action.personId)) {
+    return state;
+  }
+  if ('itemId' in action) {
+    const item = bill.items.find((candidate) => candidate.id === action.itemId);
+    if (!item) return state;
+    if (
+      (action.type === 'item/setWeight' ||
+        action.type === 'item/setPercent' ||
+        action.type === 'item/setAmount') &&
+      !item.assignments.some((assignment) => assignment.personId === action.personId)
+    ) {
+      return state;
+    }
+  }
 
   switch (action.type) {
     case 'bill/rename':
@@ -254,7 +299,7 @@ export function billReducer(state: BillState, action: BillAction): BillState {
 
     case 'item/add': {
       const name = action.name.trim();
-      if (!name) return state;
+      if (!name || !isCents(action.priceCents)) return state;
       const item: Item = {
         id: newId('item'),
         name,
@@ -268,6 +313,7 @@ export function billReducer(state: BillState, action: BillAction): BillState {
     }
 
     case 'item/update':
+      if (action.priceCents !== undefined && !isCents(action.priceCents)) return state;
       return commit(
         mapItem(bill, action.itemId, (item) => ({
           ...item,
@@ -297,6 +343,7 @@ export function billReducer(state: BillState, action: BillAction): BillState {
       );
 
     case 'item/setWeight': {
+      if (!isRoundable(action.weight)) return state;
       const weight = Math.max(1, Math.round(action.weight));
       return commit(
         mapItem(bill, action.itemId, (item) => ({
@@ -308,20 +355,22 @@ export function billReducer(state: BillState, action: BillAction): BillState {
       );
     }
 
-    case 'item/setSplitMode':
+    case 'item/setSplitMode': {
+      const item = bill.items.find((candidate) => candidate.id === action.itemId);
+      if (!item || item.splitMode === action.mode) return state;
+      const assignments = toMode(item.assignments, action.mode, item.priceCents);
+      if (!assignments) return state;
       return commit(
-        mapItem(bill, action.itemId, (item) => ({
-          ...item,
-          splitMode: action.mode,
-          assignments: toMode(item.assignments, action.mode, item.priceCents),
-        })),
+        mapItem(bill, item.id, () => ({ ...item, splitMode: action.mode, assignments })),
       );
+    }
 
     case 'item/setPercent': {
+      if (!Number.isFinite(action.percent)) return state;
       // Clamped but deliberately not normalised: forcing the other rows to
       // rebalance as you type makes the control fight you. The tray shows the
       // running total instead, and the split stays proportional either way.
-      const percent = Math.min(100, Math.max(0, Math.round(action.percent * 100) / 100));
+      const percent = Math.round(Math.min(100, Math.max(0, action.percent)) * 100) / 100;
       return commit(
         mapItem(bill, action.itemId, (item) => ({
           ...item,
@@ -333,6 +382,7 @@ export function billReducer(state: BillState, action: BillAction): BillState {
     }
 
     case 'item/setAmount': {
+      if (!isRoundable(action.amountCents)) return state;
       // Like percentages, deliberately not normalised as you type — the tray
       // reports what is left to assign instead of shuffling the other rows.
       const amountCents = Math.max(0, Math.round(action.amountCents));
@@ -353,7 +403,12 @@ export function billReducer(state: BillState, action: BillAction): BillState {
             const existing = item.assignments.find((a) => a.personId === p.id);
             return { personId: p.id, weight: existing?.weight ?? 1 };
           });
-          return { ...item, assignments: reseed(next, item.splitMode, item.priceCents) };
+          // Everyone explicitly assigns the item, even if all selected entries
+          // were zero. Merely changing modes must not revive zero claims.
+          const claims = next.some((a) => a.weight > 0)
+            ? next
+            : next.map((a) => ({ ...a, weight: 1 }));
+          return { ...item, assignments: reseed(claims, item.splitMode, item.priceCents) };
         }),
       );
 
@@ -362,15 +417,21 @@ export function billReducer(state: BillState, action: BillAction): BillState {
 
     /* ---- Charges ---- */
 
-    case 'charges/set':
-      return commit({ ...bill, charges: { ...bill.charges, ...action.patch } });
+    case 'charges/set': {
+      const charges = { ...bill.charges, ...action.patch };
+      // Validate the whole patch before committing any of it: accepting a
+      // mode switch while dropping its invalid amount would change the bill.
+      return validCharges(charges) ? commit({ ...bill, charges }) : state;
+    }
 
     case 'charges/setTipBasis':
+      if (action.basis !== 'preTax' && action.basis !== 'postTax') return state;
       return commit({ ...bill, charges: { ...bill.charges, tipBasis: action.basis } });
 
     /* ---- Payments ---- */
 
     case 'payment/set': {
+      if (!isRoundable(action.amountCents)) return state;
       // One row per person, so paying is idempotent: setting an amount
       // replaces what was there rather than stacking a second payment.
       const amountCents = Math.max(0, Math.round(action.amountCents));

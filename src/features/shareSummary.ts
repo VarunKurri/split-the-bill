@@ -1,5 +1,5 @@
 import { formatCents } from '../domain/money';
-import { perShareCents } from '../domain/split';
+import { activeAssignments, perShareCents } from '../domain/split';
 import type { Bill, BillSummary, ID, Item, PersonBreakdown } from '../domain/types';
 
 /**
@@ -53,20 +53,23 @@ export function buildShareText(bill: Bill, summary: BillSummary): string {
     }
   }
 
-  /* ---- The one thing that can make the total wrong ---- */
-  if (summary.unassignedCents > 0) {
+  /* ---- Items and charges still owed by nobody ---- */
+  if (summary.unassignedCents > 0 || summary.unclaimedChargesCents > 0) {
     out.push('', 'NOT ASSIGNED TO ANYONE');
     const names = summary.unassignedItemIds
       .map((id) => bill.items.find((item) => item.id === id))
       .filter((item): item is Item => Boolean(item))
       .map((item) => `${item.name} (${formatCents(item.priceCents)})`);
-    out.push(names.join(', '));
+    if (names.length > 0) out.push(names.join(', '));
     out.push(
       `${formatCents(summary.unassignedCents)} of items, plus ${formatCents(
         summary.unclaimedTaxCents,
       )} tax and ${formatCents(summary.unclaimedTipCents)} tip.`,
     );
     out.push('Nobody is being charged for these yet.');
+    if (summary.subtotalCents === 0) {
+      out.push('Tax and tip stay unclaimed until there is a priced item to split them against.');
+    }
   }
 
   /* ---- Money that has actually changed hands ---- */
@@ -127,14 +130,14 @@ function personDetail(breakdown: PersonBreakdown): string[] {
 
 /** "Varun, Sujai · $11.00 each": who was on an item and what it cost them. */
 function whoHadIt(item: Item, bill: Bill): string {
-  const names = item.assignments
+  const names = activeAssignments(item, bill.people)
     .map((a) => bill.people.find((p) => p.id === a.personId)?.name)
     .filter((name): name is string => Boolean(name));
 
   if (names.length === 0) return 'nobody yet';
   if (names.length === 1) return names[0];
 
-  const each = perShareCents(item);
+  const each = perShareCents(item, bill.people);
   const list = names.join(', ');
   return each === null ? `${list} (split unevenly)` : `${list} · ${formatCents(each)} each`;
 }

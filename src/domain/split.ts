@@ -80,6 +80,11 @@ export function calculateSplit(bill: Bill): BillSummary {
   const chargeWeights = [...people.map((p) => personSubtotals.get(p.id) ?? 0), unassignedCents];
   const totalChargeWeight = sum(chargeWeights);
 
+  // Flat charges can exist before any priced items do (or after the last
+  // one is removed). With no proportional basis, keep every cent unclaimed
+  // instead of losing it or arbitrarily charging the people at the table.
+  if (totalChargeWeight === 0) chargeWeights[people.length] = 1;
+
   const taxShares = allocate(taxCents, chargeWeights);
   const tipShares = allocate(tipCents, chargeWeights);
 
@@ -176,12 +181,14 @@ function trimZeros(value: string): string {
 }
 
 /**
+ * Zero weights stay editable but claim no money. Use the same claimant list
+ * for the calculation and ownership labels so the UI never contradicts the totals.
  * Assignments pointing at a person who has since been removed are ignored
  * rather than trusted. The reducer prunes them, but the engine must not
  * produce a wrong total if it is ever handed stale state (an old localStorage
  * payload, say).
  */
-function activeAssignments(item: Item, people: { id: ID }[]) {
+export function activeAssignments(item: Item, people: { id: ID }[]) {
   const known = new Set(people.map((p) => p.id));
   return item.assignments.filter((a) => known.has(a.personId) && a.weight > 0);
 }
@@ -203,9 +210,12 @@ function resolveTip(charges: Charges, subtotalCents: number, taxCents: number): 
 /* ------------------------------------------------------------------ */
 
 /** Per-share amount for an evenly shared item, for the "$14.00 each" hint. */
-export function perShareCents(item: Item): number | null {
-  if (item.assignments.length < 2) return null;
-  const weights = item.assignments.map((a) => a.weight);
+export function perShareCents(item: Item, people?: { id: ID }[]): number | null {
+  const claims = people
+    ? activeAssignments(item, people)
+    : item.assignments.filter((a) => a.weight > 0);
+  if (claims.length < 2) return null;
+  const weights = claims.map((a) => a.weight);
   const uneven = weights.some((w) => w !== weights[0]);
   if (uneven) return null;
   return allocate(item.priceCents, weights)[0];

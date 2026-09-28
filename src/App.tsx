@@ -2,6 +2,7 @@ import { BillCard } from './features/BillCard';
 import { ChargesCard } from './features/ChargesCard';
 import { ItemsCard } from './features/ItemsCard';
 import { PaymentsCard } from './features/PaymentsCard';
+import { PersistenceNotice } from './features/PersistenceNotice';
 import { PeopleCard } from './features/PeopleCard';
 import { SummaryCard } from './features/SummaryCard';
 import { TopBar } from './features/TopBar';
@@ -22,6 +23,7 @@ export default function App() {
     <BillProvider>
       <div className={styles.app}>
         <TopBar />
+        <PersistenceNotice />
         <main className={styles.body}>
           {/*
             The main column is the whole working surface, top to bottom: who is

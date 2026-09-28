@@ -18,7 +18,7 @@ npm run dev      # http://localhost:5173
 ```
 
 ```bash
-npm test         # 128 tests, concentrated on the money math
+npm test         # 168 tests, concentrated on money math and persisted-state safety
 npm run verify   # typecheck + lint + format check + tests
 npm run build    # typecheck + production build
 ```
@@ -26,8 +26,10 @@ npm run build    # typecheck + production build
 Husky hooks are installed by `npm install`: pre-commit formats and lints staged
 files, pre-push runs the full `verify` suite.
 
-No backend, no accounts, no network calls. The bill lives in `localStorage` so a
-refresh mid-dinner doesn't lose it.
+No backend, no accounts, no network calls. The bill lives in a versioned
+`localStorage` payload so a refresh mid-dinner doesn't lose it. Stored data is
+validated on the way back in, and the UI warns when the browser cannot read or
+save it rather than making persistence failure look like success.
 
 ---
 
@@ -40,7 +42,8 @@ refresh mid-dinner doesn't lose it.
 - Assign items by clicking names. Shared plates take any number of people.
 - Split a shared plate equally, by share weights, by percentage, or by exact amount —
   and see the resulting amounts as you set them. Switching between them restates the
-  same split rather than resetting it.
+  current split. Converting to shares preserves the exact ratio; percentage and
+  amount modes use their existing hundredth-of-a-percent and cent rounding.
 - Record who actually paid, and get the shortest list of "A pays B" that squares
   everyone up.
 - Light and dark, following the OS until you pick a side. Resolved before first paint,
@@ -65,10 +68,17 @@ rather than a setting.
 weight. Equal weights are the ordinary even split; unequal weights cover "she had two
 thirds of it" without introducing a second concept. The tray shows each person's
 resulting amount while you adjust, so the split is legible before you commit to it.
+Converting percentages or amounts to shares reduces the exact ratio: 50/30/20
+becomes 5:3:2. Zero claims stay zero when changing between unequal modes, and
+clicking the selected mode again leaves the entries alone. Choosing Equally or
+Everyone is an explicit assignment action. A legacy ratio that cannot fit safely
+in whole-number shares is left in its current mode rather than approximated.
 
 **Cents.** All money is integer cents, and every division goes through
 largest-remainder allocation. A $10 plate split three ways is 3.34 / 3.33 / 3.33 —
-never 3.33 × 3 with a cent quietly disappearing. Where rounding does move a cent, it
+never 3.33 × 3 with a cent quietly disappearing. Decimal inputs round to cents
+from their digits, so `1.005` becomes `101` cents without floating-point drift; amounts
+outside the safe integer range are rejected. Where rounding does move a cent, it
 is shown as a `Rounding` line in the person's breakdown, and a reconciliation line
 adds the per-person totals back up and checks them against the bill total on every
 render.
@@ -78,7 +88,13 @@ totals wrong, so it is a first-class state: amber row, persistent banner with th
 amount at stake, and — importantly — its share of tax and tip stays _unclaimed_
 rather than being silently redistributed onto the people who have already been
 assigned. Nobody gets quietly overcharged for a plate nobody has owned up to. There's
-a one-click "split them evenly" escape hatch for when you stop caring.
+a one-click "split them evenly" escape hatch for when you stop caring. When the
+item subtotal is zero, flat charges (and any post-tax tip) stay unclaimed and visible
+in the bill and copied summary until there is a priced item to allocate against.
+Zero-percent and zero-amount entries stay editable, including after a refresh, but
+claim no money. Ownership labels and the copied summary use the same positive
+claimants as the calculation. When every entry is zero, the item remains unassigned
+and the tray explains why; a lone remaining percentage or amount entry stays editable.
 
 **Not a wizard.** A wizard would force "all the people" before "all the items", which
 is the opposite of how a table works — plates and people arrive in whatever order they
@@ -113,7 +129,12 @@ reconcile to the bill total across hundreds of awkward price and party-size
 combinations.
 
 State is `useReducer` + context. There is no data-fetching, no server state and no
-routing, so a state library would be ceremony.
+routing, so a state library would be ceremony. The reducer validates numeric edits
+before committing them: item prices and flat charges must be non-negative integer
+cents, while share and payment editors retain their existing rounding and clamping.
+Non-finite or unsafe amount inputs are rejected. Actions for removed people, items,
+or assignments are ignored without consuming Undo; charge patches apply only when
+the entire patch is valid.
 
 Tooling is ESLint with type-checked rules, Prettier, and husky + lint-staged. The
 type-checked rules earn their keep: turning them on surfaced two floating promises in
@@ -133,19 +154,25 @@ Chip, Badge, Item Row, Summary Row).
 
 ## Testing
 
-128 tests, concentrated where being wrong actually costs something:
+168 tests, concentrated where being wrong actually costs something:
 
 - `money.test.ts` — parsing tolerance and strictness, and an exhaustive sweep proving
-  allocation never creates or loses a cent.
+  allocation never creates or loses a cent, decimal half-cent rounding, and safe-integer
+  input boundaries.
+- `shareWeights.test.ts` — exact whole-share ratios, zero claims, scientific notation,
+  and safe-integer limits.
 - `split.test.ts` — the salad-eater case, uneven shares, percent and amount splits
   (including ones that don't add up), pre/post-tax tip, unassigned items, zero-value
-  items, stale assignments, payments, and reconciliation across a wide sweep of prices
+  items with flat charges, stale assignments, payments, and reconciliation across a wide sweep of prices
   and party sizes.
 - `settle.test.ts` — that the settle-up plan invents no money, never asks anyone to
   send more than they owe, and leaves a shortfall outstanding rather than fabricating
   a transfer to balance the books.
 - `billReducer.test.ts` — colour recycling, name disambiguation, what happens to items
-  when a person is removed, weight clamping, split-mode conversions, and undo.
+  when a person is removed, weight clamping, split-mode conversions, and undo. Invalid
+  numeric edits and stale row actions leave both the current bill and its undo intact.
+- `persistence.test.ts` — versioned writes, legacy payload migration, corrupt data
+  recovery, unsafe-value repair, zero-weight draft round trips, and unavailable browser storage.
 - `shareSummary.test.ts` — that the text you paste into the group chat says what
   actually happened, including who still owes whom.
 

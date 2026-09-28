@@ -1,22 +1,24 @@
-import { useEffect, useMemo, useReducer, type ReactNode } from 'react';
+import { useEffect, useMemo, useReducer, useState, type ReactNode } from 'react';
 import { calculateSplit } from '../domain/split';
 import { BillContext, type BillContextValue } from './billContext';
-import { billReducer, type BillState } from './billReducer';
+import { billReducer } from './billReducer';
 import { clearStoredBill, loadBill, saveBill } from './persistence';
 
-function init(): BillState {
-  return { bill: loadBill(), undo: null };
-}
-
 export function BillProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(billReducer, undefined, init);
+  const [initial] = useState(loadBill);
+  const [state, dispatch] = useReducer(billReducer, { bill: initial.bill, undo: null });
+  const [persistenceWarning, setPersistenceWarning] = useState(initial.warning);
 
   useEffect(() => {
     // A reset should not leave the old bill sitting in storage if the tab
     // is closed before the next write.
     const isEmpty = state.bill.people.length === 0 && state.bill.items.length === 0;
-    if (isEmpty) clearStoredBill();
-    else saveBill(state.bill);
+    const saved = isEmpty ? clearStoredBill() : saveBill(state.bill);
+    if (!saved) {
+      setPersistenceWarning(
+        'This bill cannot be saved on this device. Keep this page open until you finish.',
+      );
+    }
   }, [state.bill]);
 
   const value = useMemo<BillContextValue>(
@@ -24,10 +26,12 @@ export function BillProvider({ children }: { children: ReactNode }) {
       bill: state.bill,
       summary: calculateSplit(state.bill),
       undoLabel: state.undo?.label ?? null,
+      persistenceWarning,
+      dismissPersistenceWarning: () => setPersistenceWarning(null),
       dispatch,
       peopleById: new Map(state.bill.people.map((p) => [p.id, p])),
     }),
-    [state.bill, state.undo],
+    [state.bill, state.undo, persistenceWarning],
   );
 
   return <BillContext.Provider value={value}>{children}</BillContext.Provider>;

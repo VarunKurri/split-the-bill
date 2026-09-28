@@ -6,6 +6,8 @@ export interface BillContextValue {
   bill: Bill;
   summary: BillSummary;
   undoLabel: string | null;
+  persistenceWarning: string | null;
+  dismissPersistenceWarning: () => void;
   dispatch: Dispatch<BillAction>;
   peopleById: Map<ID, Person>;
 }

@@ -1,0 +1,28 @@
+.notice {
+  width: 100%;
+  padding: var(--space-sm) var(--space-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  background: var(--color-bg-warning-subtle);
+  color: var(--color-text-warning);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  font-weight: 500;
+}
+
+.dismiss {
+  flex: none;
+  width: var(--space-xl);
+  height: var(--space-xl);
+  border-radius: var(--radius-full);
+  color: currentColor;
+  font-size: var(--font-size-xl);
+  line-height: 1;
+}
+
+.dismiss:hover {
+  background: var(--color-bg-warning-solid);
+  color: var(--color-text-inverse);
+}

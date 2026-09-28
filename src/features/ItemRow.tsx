@@ -8,7 +8,13 @@ import { SegmentedControl } from '../components/ui/SegmentedControl';
 import { Field } from '../components/ui/inputs';
 import { acceptsNumericDraft } from '../components/ui/numericDraft';
 import { allocate, centsToInput, formatCents, parseCents, parsePercent } from '../domain/money';
-import { amountGapCents, perShareCents, splitIsBalanced, weightTotal } from '../domain/split';
+import {
+  activeAssignments,
+  amountGapCents,
+  perShareCents,
+  splitIsBalanced,
+  weightTotal,
+} from '../domain/split';
 import type { Item, Person, SplitMode } from '../domain/types';
 import { useBill } from '../state/useBill';
 import styles from './ItemsCard.module.css';
@@ -34,7 +40,7 @@ function weightLabel(item: Item, weight: number | undefined): string | null {
   if (weight == null) return null;
   if (item.splitMode === 'percent') return `${trimPercent(weight)}%`;
   if (item.splitMode === 'amount') return formatCents(weight);
-  return weight > 1 ? `×${weight}` : null;
+  return weight !== 1 ? `×${weight}` : null;
 }
 
 /** The one-line "how is this being split" hint on a collapsed row. */
@@ -184,16 +190,20 @@ interface ItemRowProps {
  * every line, and it shouldn't cost a hunt for a small target.
  */
 export function ItemRow({ item }: ItemRowProps) {
-  const { dispatch, peopleById } = useBill();
+  const { bill, dispatch, peopleById } = useBill();
   const [open, setOpen] = useState(false);
 
-  const assignees = item.assignments
+  const selectedPeople = item.assignments
+    .map((a) => peopleById.get(a.personId))
+    .filter((p): p is Person => Boolean(p));
+
+  const assignees = activeAssignments(item, bill.people)
     .map((a) => peopleById.get(a.personId))
     .filter((p): p is Person => Boolean(p));
 
   const unassigned = assignees.length === 0;
   const shared = assignees.length > 1;
-  const evenShare = perShareCents(item);
+  const evenShare = perShareCents(item, bill.people);
 
   const rowClass = [styles.row, unassigned ? styles.rowUnassigned : '', open ? styles.rowOpen : '']
     .filter(Boolean)
@@ -255,7 +265,7 @@ export function ItemRow({ item }: ItemRowProps) {
         </span>
       </div>
 
-      {open && <AssignTray item={item} assignees={assignees} />}
+      {open && <AssignTray item={item} assignees={selectedPeople} />}
     </li>
   );
 }
@@ -275,9 +285,10 @@ function AssignTray({ item, assignees }: { item: Item; assignees: Person[] }) {
 
   const weights = item.assignments.map((a) => a.weight);
   const shares = allocate(item.priceCents, weights);
-  const showWeights = assignees.length > 1;
   const percentMode = item.splitMode === 'percent';
   const amountMode = item.splitMode === 'amount';
+  const showWeights = assignees.length > 1 || ((percentMode || amountMode) && assignees.length > 0);
+  const hasClaims = activeAssignments(item, bill.people).length > 0;
   const unbalanced = !splitIsBalanced(item);
 
   return (
@@ -419,7 +430,9 @@ function AssignTray({ item, assignees }: { item: Item; assignees: Person[] }) {
                   : amountGapCents(item) > 0
                     ? `${formatCents(amountGapCents(item))} of this item is still unassigned.`
                     : `Amounts exceed the item by ${formatCents(-amountGapCents(item))}.`}{' '}
-                It is still split in proportion to what you entered.
+                {hasClaims
+                  ? 'It is still split in proportion to what you entered.'
+                  : 'No positive shares are entered, so this item and its tax and tip are unclaimed.'}
               </p>
             )}
           </div>

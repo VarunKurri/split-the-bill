@@ -26,6 +26,34 @@ describe('parseCents', () => {
     expect(parseCents('0.005')).toBe(1);
     expect(parseCents('10.999')).toBe(1100);
   });
+
+  it('rounds decimal half cents up without binary floating-point drift', () => {
+    expect(parseCents('1.005')).toBe(101);
+    expect(parseCents('1.015')).toBe(102);
+    expect(parseCents('1.255')).toBe(126);
+    expect(parseCents('10.075')).toBe(1008);
+    expect(parseCents('1.004999999999999999')).toBe(100);
+    for (let cents = 0; cents < 10000; cents += 1) {
+      const input = `${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, '0')}5`;
+      expect(parseCents(input)).toBe(cents + 1);
+    }
+  });
+
+  it('requires a digit, including in decorated input', () => {
+    for (const input of ['.', '$ .', ', .', '$', ' , ']) {
+      expect(parseCents(input)).toBeNull();
+    }
+    expect(parseCents('5.')).toBe(500);
+    expect(parseCents('000.005')).toBe(1);
+  });
+
+  it('rejects cents outside the safe integer range, including after rounding', () => {
+    expect(parseCents('90071992547409.91')).toBe(Number.MAX_SAFE_INTEGER);
+    expect(parseCents('90071992547409.914')).toBe(Number.MAX_SAFE_INTEGER);
+    expect(parseCents('90071992547409.915')).toBeNull();
+    expect(parseCents('90071992547409.92')).toBeNull();
+    expect(parseCents('9'.repeat(309))).toBeNull();
+  });
 });
 
 describe('parsePercent', () => {
@@ -39,6 +67,8 @@ describe('parsePercent', () => {
     expect(parsePercent('101')).toBeNull();
     expect(parsePercent('-1')).toBeNull();
     expect(parsePercent('')).toBeNull();
+    expect(parsePercent('.')).toBeNull();
+    expect(parsePercent(' . % ')).toBeNull();
   });
 });
 

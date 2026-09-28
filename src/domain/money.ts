@@ -25,17 +25,22 @@ export function centsToInput(cents: number): string {
  * Parse user input into cents. Tolerant of `$`, thousands separators and
  * whitespace; strict about everything else.
  *
- * Returns `null` for anything that isn't a non-negative number, so callers can
+ * Returns `null` unless the rounded cents are a non-negative safe integer, so callers can
  * distinguish "empty / invalid" from "zero" and show the field's error state
  * rather than silently writing NaN into the bill.
  */
 export function parseCents(input: string): number | null {
   const cleaned = input.replace(/[$,\s]/g, '');
-  if (cleaned === '') return null;
-  if (!/^\d*\.?\d*$/.test(cleaned)) return null;
-  const value = Number(cleaned);
-  if (!Number.isFinite(value) || value < 0) return null;
-  return Math.round(value * 100);
+  if (!/^(?:\d+\.?\d*|\.\d+)$/.test(cleaned)) return null;
+
+  // Read the decimal digits directly: Number('1.005') * 100 is slightly
+  // below 100.5. BigInt also preserves cents at the safe-integer boundary.
+  const [whole, fraction = ''] = cleaned.split('.');
+  const cents =
+    BigInt(whole || '0') * 100n +
+    BigInt(fraction.slice(0, 2).padEnd(2, '0')) +
+    (Number(fraction[2] ?? '0') >= 5 ? 1n : 0n);
+  return cents <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(cents) : null;
 }
 
 /** Parse a percentage such as `8.5` or `8.5%`. Returns `null` when unusable. */

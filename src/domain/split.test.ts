@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { amountGapCents, calculateSplit, perShareCents, splitIsBalanced } from './split';
+import {
+  activeAssignments,
+  amountGapCents,
+  calculateSplit,
+  perShareCents,
+  splitIsBalanced,
+} from './split';
 import { sum } from './money';
 import type { Bill, Charges, Item, Payment, Person } from './types';
 
@@ -250,6 +256,65 @@ describe('calculateSplit — reconciliation', () => {
 });
 
 describe('calculateSplit — degenerate input', () => {
+  it.each(['empty', 'people only', 'free assigned item', 'free unassigned item'])(
+    'keeps flat charges unclaimed with a zero subtotal: %s',
+    (scenario) => {
+      const people = scenario === 'empty' ? [] : [person('a', 'Alex')];
+      const items =
+        scenario === 'free assigned item'
+          ? [item('free', 'Comped dessert', 0, 'a')]
+          : scenario === 'free unassigned item'
+            ? [item('free', 'Comped dessert', 0)]
+            : [];
+      const result = calculateSplit(
+        bill(people, items, {
+          ...NO_CHARGES,
+          taxMode: 'amount',
+          taxCents: 125,
+          tipMode: 'amount',
+          tipCents: 375,
+        }),
+      );
+      expect(result.totalCents).toBe(500);
+      expect(result.unclaimedTaxCents).toBe(125);
+      expect(result.unclaimedTipCents).toBe(375);
+      expect(result.unclaimedChargesCents).toBe(500);
+      expect(result.perPerson.every((p) => p.totalCents === 0)).toBe(true);
+      expect(result.unpaidCents).toBe(500);
+      expect(result.reconciles).toBe(true);
+    },
+  );
+
+  it('keeps post-tax percentage tip unclaimed when only flat tax supplies its base', () => {
+    const result = calculateSplit(
+      bill([person('a', 'Alex')], [], {
+        ...NO_CHARGES,
+        taxMode: 'amount',
+        taxCents: 125,
+        tipPercent: 20,
+        tipBasis: 'postTax',
+      }),
+    );
+    expect(result.tipCents).toBe(25);
+    expect(result.unclaimedChargesCents).toBe(150);
+    expect(result.reconciles).toBe(true);
+  });
+
+  it('allocates previously unclaimed flat charges once a priced item is assigned', () => {
+    const people = [person('a', 'Alex'), person('b', 'Bri')];
+    const charges: Charges = {
+      ...NO_CHARGES,
+      taxMode: 'amount',
+      taxCents: 125,
+      tipMode: 'amount',
+      tipCents: 375,
+    };
+    const result = calculateSplit(bill(people, [item('meal', 'Dinner', 1000, 'a')], charges));
+    expect(result.unclaimedChargesCents).toBe(0);
+    expect(result.perPerson.map((p) => p.totalCents)).toEqual([1500, 0]);
+    expect(result.reconciles).toBe(true);
+  });
+
   it('handles an empty bill', () => {
     const result = calculateSplit(bill([], []));
     expect(result.totalCents).toBe(0);
@@ -284,6 +349,21 @@ describe('calculateSplit — degenerate input', () => {
 });
 
 describe('perShareCents', () => {
+  it('does not describe all-zero assignments as an even split', () => {
+    expect(perShareCents(percentItem(1000, { a: 0, b: 0 }))).toBeNull();
+  });
+
+  it('uses the same positive, current claimants as the calculation', () => {
+    const shared = percentItem(1000, { a: 50, b: 50, c: 0, gone: 100 });
+    const people = [person('a', 'Alex'), person('b', 'Bri'), person('c', 'Chidi')];
+    expect(activeAssignments(shared, people).map((a) => a.personId)).toEqual(['a', 'b']);
+    expect(perShareCents(shared, people)).toBe(500);
+    expect(perShareCents(percentItem(1000, { a: 100, b: 0 }))).toBeNull();
+    expect(calculateSplit(bill(people, [shared])).perPerson.map((p) => p.subtotalCents)).toEqual([
+      500, 500, 0,
+    ]);
+  });
+
   it('reports the per-head amount for an evenly shared item', () => {
     expect(perShareCents(item('i1', 'Burrata', 4200, 'a', 'b', 'c'))).toBe(1400);
   });

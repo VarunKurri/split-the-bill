@@ -135,6 +135,18 @@ describe('buildShareText', () => {
     expect(text).not.toContain('SETTLE UP');
   });
 
+  it('calls out unclaimed charges even when no items have a price', () => {
+    const text = textFor({
+      items: [],
+      charges: { ...CHARGES, taxMode: 'amount', taxCents: 125, tipMode: 'amount', tipCents: 375 },
+    });
+    expect(text).toContain('Dinner: $5.00');
+    expect(text).toContain('NOT ASSIGNED TO ANYONE');
+    expect(text).toContain('$0.00 of items, plus $1.25 tax and $3.75 tip.');
+    expect(text).toContain('Nobody is being charged for these yet.');
+    expect(text).toContain('Alex: $0.00');
+  });
+
   it('names every payer and what they each put in', () => {
     const text = textFor(
       pay({ personId: 'a', amountCents: 5000 }, { personId: 'b', amountCents: 2800 }),
@@ -196,5 +208,43 @@ describe('buildShareText', () => {
 
     expect(text).not.toContain('—');
     expect(text).not.toContain('–');
+  });
+
+  it('reports an all-zero split as unassigned instead of saying everyone shared it', () => {
+    const text = textFor({
+      items: [
+        {
+          ...solo('i', 'Dinner', 1000, 'a'),
+          splitMode: 'percent',
+          assignments: [
+            { personId: 'a', weight: 0 },
+            { personId: 'b', weight: 0 },
+          ],
+        },
+      ],
+    });
+    expect(text).toContain('    nobody yet');
+    expect(text).toContain('NOT ASSIGNED TO ANYONE');
+    expect(text).not.toContain('Alex, Bri');
+    expect(text).not.toContain('$0.00 each');
+  });
+
+  it('omits zero-weight and removed people from the item ownership description', () => {
+    const text = textFor({
+      items: [
+        {
+          ...solo('i', 'Dinner', 1000, 'a'),
+          splitMode: 'amount',
+          assignments: [
+            { personId: 'a', weight: 1000 },
+            { personId: 'b', weight: 0 },
+            { personId: 'gone', weight: 1000 },
+          ],
+        },
+      ],
+    });
+    expect(text).toContain('• Dinner: $10.00\n    Alex\n');
+    expect(text).not.toContain('Alex, Bri');
+    expect(text).not.toContain('split unevenly');
   });
 });

@@ -1,7 +1,7 @@
 import { Badge } from '../components/ui/Badge';
 import { Card } from '../components/ui/Card';
 import { formatCents } from '../domain/money';
-import { perShareCents } from '../domain/split';
+import { activeAssignments, perShareCents } from '../domain/split';
 import type { Item } from '../domain/types';
 import { useBill } from '../state/useBill';
 import styles from './BillCard.module.css';
@@ -17,7 +17,7 @@ import styles from './BillCard.module.css';
 export function BillCard() {
   const { bill, summary } = useBill();
 
-  if (bill.items.length === 0) return null;
+  if (bill.items.length === 0 && summary.totalCents === 0) return null;
 
   const { charges } = bill;
 
@@ -60,13 +60,15 @@ export function BillCard() {
         <span className={`${styles.grandValue} tabular`}>{formatCents(summary.totalCents)}</span>
       </div>
 
-      {summary.unassignedItemIds.length > 0 && (
+      {(summary.unassignedItemIds.length > 0 || summary.unclaimedChargesCents > 0) && (
         <p className={styles.note}>
           <Badge tone="warningSolid">Nobody yet</Badge>
           <span>
             {formatCents(summary.unassignedCents)} of items,{' '}
             {formatCents(summary.unclaimedTaxCents)} tax and{' '}
             {formatCents(summary.unclaimedTipCents)} tip are still unclaimed.
+            {summary.subtotalCents === 0 &&
+              ' Tax and tip stay unclaimed until there is a priced item to split them against.'}
           </span>
         </p>
       )}
@@ -85,14 +87,14 @@ function TotalRow({ label, cents }: { label: string; cents: number }) {
 
 /** "Varun, Sujai · $11.00 each", or the warning when nobody has claimed it. */
 function whoHadIt(item: Item, people: { id: string; name: string }[]): string {
-  const names = item.assignments
+  const names = activeAssignments(item, people)
     .map((a) => people.find((p) => p.id === a.personId)?.name)
     .filter((name): name is string => Boolean(name));
 
   if (names.length === 0) return 'nobody yet';
   if (names.length === 1) return names[0];
 
-  const each = perShareCents(item);
+  const each = perShareCents(item, people);
   const list = names.join(', ');
   return each === null ? list : `${list} · ${formatCents(each)} each`;
 }

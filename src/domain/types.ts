@@ -132,7 +132,7 @@ export interface BillSummary {
   tipCents: number;
   /** subtotal + tax + tip. */
   totalCents: number;
-  /** Tax + tip attributable to unassigned items — owed by nobody yet. */
+  /** Unclaimed tax + tip, including all charges when the item subtotal is zero. */
   unclaimedChargesCents: number;
   /**
    * The two halves of `unclaimedChargesCents`, kept apart so the UI can say

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { billReducer, createEmptyBill, type BillAction, type BillState } from './billReducer';
+import { calculateSplit } from '../domain/split';
+import type { SplitMode } from '../domain/types';
 
 function fresh(): BillState {
   return { bill: createEmptyBill(), undo: null };
@@ -191,7 +193,7 @@ describe('split modes', () => {
     expect(state.bill.items[0].assignments.map((a) => a.weight)).toEqual([1, 1, 1]);
   });
 
-  it('rounds fractional percentages up to whole shares when switching to shares', () => {
+  it('preserves fractional percentage ratios as whole shares', () => {
     let state = withSharedItem();
     const itemId = state.bill.items[0].id;
 
@@ -202,6 +204,115 @@ describe('split modes', () => {
     );
     expect(state.bill.items[0].assignments.every((a) => Number.isInteger(a.weight))).toBe(true);
     expect(state.bill.items[0].assignments.every((a) => a.weight >= 1)).toBe(true);
+    expect(state.bill.items[0].assignments.map((a) => a.weight)).toEqual([3334, 3333, 3333]);
+  });
+
+  it.each([
+    { mode: 'percent' as const, weights: [50, 30, 20], expected: [5, 3, 2] },
+    { mode: 'percent' as const, weights: [12.5, 37.5, 50], expected: [1, 3, 4] },
+    { mode: 'amount' as const, weights: [1500, 900, 600], expected: [5, 3, 2] },
+    { mode: 'amount' as const, weights: [750, 2250, 0], expected: [1, 3, 0] },
+  ])(
+    'preserves the ratio and amounts owed when converting $weights from $mode to shares',
+    ({ mode, weights, expected }) => {
+      let state = withSharedItem();
+      const itemId = state.bill.items[0].id;
+      state = run(state, { type: 'item/setSplitMode', itemId, mode });
+      state.bill.people.forEach((person, i) => {
+        state = run(
+          state,
+          mode === 'percent'
+            ? { type: 'item/setPercent', itemId, personId: person.id, percent: weights[i] }
+            : { type: 'item/setAmount', itemId, personId: person.id, amountCents: weights[i] },
+        );
+      });
+      const before = calculateSplit(state.bill);
+      state = run(state, { type: 'item/setSplitMode', itemId, mode: 'shares' });
+      expect(state.bill.items[0].assignments.map((a) => a.weight)).toEqual(expected);
+      expect(calculateSplit(state.bill).perPerson.map((p) => p.totalCents)).toEqual(
+        before.perPerson.map((p) => p.totalCents),
+      );
+      expect(calculateSplit(state.bill).reconciles).toBe(true);
+    },
+  );
+
+  it('leaves all-zero claims unassigned when changing between unequal split modes', () => {
+    let state = withSharedItem();
+    const itemId = state.bill.items[0].id;
+    state = run(state, { type: 'item/setSplitMode', itemId, mode: 'percent' });
+    for (const person of state.bill.people)
+      state = run(state, { type: 'item/setPercent', itemId, personId: person.id, percent: 0 });
+    for (const mode of ['shares', 'amount', 'percent'] satisfies SplitMode[]) {
+      state = run(state, { type: 'item/setSplitMode', itemId, mode });
+      expect(state.bill.items[0].assignments.map((a) => a.weight)).toEqual([0, 0, 0]);
+      expect(calculateSplit(state.bill).unassignedCents).toBe(3000);
+    }
+    // Everyone remains an explicit recovery action for an all-zero draft.
+    state = run(state, { type: 'item/assignAll', itemId });
+    expect(calculateSplit(state.bill).unassignedCents).toBe(0);
+    expect(state.bill.items[0].assignments.map((a) => a.weight)).toEqual([33.34, 33.33, 33.33]);
+  });
+
+  it('leaves entries and undo intact when the selected mode is clicked again', () => {
+    let state = withSharedItem();
+    const itemId = state.bill.items[0].id;
+    state = run(
+      state,
+      { type: 'item/setSplitMode', itemId, mode: 'percent' },
+      ...state.bill.people.map((person) => ({
+        type: 'item/setPercent' as const,
+        itemId,
+        personId: person.id,
+        percent: 40,
+      })),
+      { type: 'item/add', name: 'Extra', priceCents: 100 },
+    );
+    state = run(state, { type: 'item/remove', itemId: state.bill.items[1].id });
+    expect(billReducer(state, { type: 'item/setSplitMode', itemId, mode: 'percent' })).toBe(state);
+  });
+
+  it('leaves an unrepresentable legacy ratio and undo unchanged', () => {
+    let state = withSharedItem();
+    const itemId = state.bill.items[0].id;
+    state = run(state, { type: 'item/add', name: 'Extra', priceCents: 100 });
+    state = run(state, { type: 'item/remove', itemId: state.bill.items[1].id });
+    state = {
+      ...state,
+      bill: {
+        ...state.bill,
+        items: [
+          {
+            ...state.bill.items[0],
+            splitMode: 'percent',
+            assignments: state.bill.items[0].assignments.map((a, index) => ({
+              ...a,
+              weight: [1, 1e20, 0][index],
+            })),
+          },
+        ],
+      },
+    };
+    expect(billReducer(state, { type: 'item/setSplitMode', itemId, mode: 'shares' })).toBe(state);
+  });
+
+  it('preserves zero claims and ratios when converting a free item to amount mode', () => {
+    let state = withSharedItem();
+    const itemId = state.bill.items[0].id;
+    state = run(
+      state,
+      { type: 'item/update', itemId, priceCents: 0 },
+      { type: 'item/setSplitMode', itemId, mode: 'percent' },
+    );
+    [75, 25, 0].forEach((percent, i) => {
+      state = run(state, {
+        type: 'item/setPercent',
+        itemId,
+        personId: state.bill.people[i].id,
+        percent,
+      });
+    });
+    state = run(state, { type: 'item/setSplitMode', itemId, mode: 'amount' });
+    expect(state.bill.items[0].assignments.map((a) => a.weight)).toEqual([3, 1, 0]);
   });
 
   it('clamps a percentage to 0-100 and keeps two decimals', () => {
@@ -525,5 +636,144 @@ describe('undo', () => {
   it('is a no-op when there is nothing to undo', () => {
     const state = fresh();
     expect(billReducer(state, { type: 'undo' })).toBe(state);
+  });
+});
+
+describe('invalid and stale actions', () => {
+  function withUndo() {
+    let state = run(
+      fresh(),
+      { type: 'person/add', name: 'Alex' },
+      { type: 'person/add', name: 'Bri' },
+      { type: 'item/add', name: 'Dinner', priceCents: 3000, assignToAll: true },
+      { type: 'item/add', name: 'Extra', priceCents: 100 },
+    );
+    state = run(state, { type: 'item/remove', itemId: state.bill.items[1].id });
+    return state;
+  }
+
+  it('rejects invalid item prices without discarding the bill or its undo', () => {
+    const state = withUndo();
+    const itemId = state.bill.items[0].id;
+    for (const priceCents of [NaN, Infinity, -Infinity, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
+      expect(billReducer(state, { type: 'item/add', name: 'Invalid', priceCents })).toBe(state);
+      expect(billReducer(state, { type: 'item/update', itemId, name: 'Invalid', priceCents })).toBe(
+        state,
+      );
+    }
+    expect(run(state, { type: 'undo' }).bill.items).toHaveLength(2);
+  });
+
+  it('rejects non-finite or unsafe weights and amounts at every numeric entry point', () => {
+    const state = withUndo();
+    const itemId = state.bill.items[0].id;
+    const personId = state.bill.people[0].id;
+    for (const value of [
+      NaN,
+      Infinity,
+      -Infinity,
+      Number.MAX_SAFE_INTEGER + 1,
+      -Number.MAX_SAFE_INTEGER - 1,
+    ]) {
+      const actions: BillAction[] = [
+        { type: 'item/setWeight', itemId, personId, weight: value },
+        { type: 'item/setAmount', itemId, personId, amountCents: value },
+        { type: 'payment/set', personId, amountCents: value },
+      ];
+      for (const action of actions) expect(billReducer(state, action)).toBe(state);
+    }
+    for (const percent of [NaN, Infinity, -Infinity]) {
+      expect(billReducer(state, { type: 'item/setPercent', itemId, personId, percent })).toBe(
+        state,
+      );
+    }
+    expect(calculateSplit(state.bill).reconciles).toBe(true);
+  });
+
+  it('rejects an invalid charge patch atomically and keeps undo available', () => {
+    const state = withUndo();
+    for (const field of ['taxCents', 'tipCents'] as const) {
+      for (const value of [
+        NaN,
+        Infinity,
+        -Infinity,
+        -1,
+        1.5,
+        Number.MAX_SAFE_INTEGER + 1,
+        undefined,
+      ]) {
+        expect(
+          billReducer(state, { type: 'charges/set', patch: { taxMode: 'amount', [field]: value } }),
+        ).toBe(state);
+      }
+    }
+    for (const field of ['taxPercent', 'tipPercent'] as const) {
+      for (const value of [NaN, Infinity, -Infinity, -1, 101, undefined]) {
+        expect(billReducer(state, { type: 'charges/set', patch: { [field]: value } })).toBe(state);
+      }
+    }
+  });
+
+  it('ignores actions for missing people, items, and assignments without consuming undo', () => {
+    const state = withUndo();
+    const itemId = state.bill.items[0].id;
+    const personId = state.bill.people[0].id;
+    const actions: BillAction[] = [
+      { type: 'person/remove', personId: 'gone' },
+      { type: 'person/toggleSettled', personId: 'gone' },
+      { type: 'payment/set', personId: 'gone', amountCents: 100 },
+      { type: 'item/toggleAssignee', itemId, personId: 'gone' },
+      { type: 'item/update', itemId: 'gone', priceCents: 100 },
+      { type: 'item/remove', itemId: 'gone' },
+      { type: 'item/toggleAssignee', itemId: 'gone', personId },
+      { type: 'item/setWeight', itemId: 'gone', personId, weight: 2 },
+      { type: 'item/setPercent', itemId: 'gone', personId, percent: 50 },
+      { type: 'item/setAmount', itemId: 'gone', personId, amountCents: 100 },
+      { type: 'item/setSplitMode', itemId: 'gone', mode: 'shares' },
+      { type: 'item/assignAll', itemId: 'gone' },
+      { type: 'item/clearAssignees', itemId: 'gone' },
+    ];
+    for (const action of actions) expect(billReducer(state, action)).toBe(state);
+
+    const unassigned = {
+      ...state,
+      bill: { ...state.bill, items: [{ ...state.bill.items[0], assignments: [] }] },
+    };
+    for (const action of [
+      { type: 'item/setWeight', itemId, personId, weight: 2 },
+      { type: 'item/setPercent', itemId, personId, percent: 50 },
+      { type: 'item/setAmount', itemId, personId, amountCents: 100 },
+    ] satisfies BillAction[]) {
+      expect(billReducer(unassigned, action)).toBe(unassigned);
+    }
+  });
+
+  it('keeps valid clamping and rounding behavior for assignment and payment edits', () => {
+    const state = withUndo();
+    const itemId = state.bill.items[0].id;
+    const personId = state.bill.people[0].id;
+    expect(
+      run(state, { type: 'item/setWeight', itemId, personId, weight: 2.6 }).bill.items[0]
+        .assignments[0].weight,
+    ).toBe(3);
+    expect(
+      run(state, { type: 'item/setAmount', itemId, personId, amountCents: 100.6 }).bill.items[0]
+        .assignments[0].weight,
+    ).toBe(101);
+    expect(
+      run(state, { type: 'payment/set', personId, amountCents: 100.6 }).bill.payments[0]
+        .amountCents,
+    ).toBe(101);
+    expect(
+      run(state, { type: 'item/setPercent', itemId, personId, percent: Number.MAX_VALUE }).bill
+        .items[0].assignments[0].weight,
+    ).toBe(100);
+    const next = run(state, {
+      type: 'charges/set',
+      patch: { taxPercent: 9.25, tipMode: 'amount', tipCents: 500 },
+    });
+    expect(calculateSplit(next.bill).reconciles).toBe(true);
+    expect(next.bill.charges.taxPercent).toBe(9.25);
+    expect(next.bill.charges.tipCents).toBe(500);
   });
 });
